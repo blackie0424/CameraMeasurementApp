@@ -170,24 +170,15 @@ class ResultsViewController: UIViewController {
     @IBAction func saveButtonTapped(_ sender: UIButton) {
         guard let record = measurementRecord else { return }
         
-        // Create annotated image with measurements
-        let annotatedImage = createAnnotatedImage(from: record)
-        
-        // Save annotated image to photo library
-        UIImageWriteToSavedPhotosAlbum(annotatedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
-        
-        // TODO: Save to Core Data (will be implemented in later tasks)
+        // Show save options
+        showSaveOptions(for: record)
     }
     
     @IBAction func shareButtonTapped(_ sender: UIButton) {
         guard let record = measurementRecord else { return }
         
-        // Create annotated image with measurements
-        let annotatedImage = createAnnotatedImage(from: record)
-        
-        let activityVC = UIActivityViewController(activityItems: [annotatedImage], applicationActivities: nil)
-        activityVC.popoverPresentationController?.sourceView = shareButton
-        present(activityVC, animated: true)
+        // Show share options
+        showShareOptions(for: record)
     }
     
     @IBAction func retakeButtonTapped(_ sender: UIButton) {
@@ -389,6 +380,185 @@ class ResultsViewController: UIViewController {
         } else {
             showSuccess("已儲存到相簿")
         }
+    }
+    
+    private func showSaveOptions(for record: MeasurementRecord) {
+        let alert = UIAlertController(title: "儲存選項", message: "選擇要儲存的格式", preferredStyle: .actionSheet)
+        
+        // Save annotated image to photo library
+        alert.addAction(UIAlertAction(title: "儲存標註影像到相簿", style: .default) { [weak self] _ in
+            self?.saveAnnotatedImageToPhotoLibrary(record)
+        })
+        
+        // Save to Core Data
+        alert.addAction(UIAlertAction(title: "儲存測量記錄", style: .default) { [weak self] _ in
+            self?.saveMeasurementRecord(record)
+        })
+        
+        // Export as CSV
+        alert.addAction(UIAlertAction(title: "匯出為 CSV", style: .default) { [weak self] _ in
+            self?.exportAsCSV(record)
+        })
+        
+        // Export all (image + CSV)
+        alert.addAction(UIAlertAction(title: "匯出全部（影像 + CSV）", style: .default) { [weak self] _ in
+            self?.exportAll(record)
+        })
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = saveButton
+            popover.sourceRect = saveButton.bounds
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    private func showShareOptions(for record: MeasurementRecord) {
+        let alert = UIAlertController(title: "分享選項", message: "選擇要分享的內容", preferredStyle: .actionSheet)
+        
+        // Share annotated image
+        alert.addAction(UIAlertAction(title: "分享標註影像", style: .default) { [weak self] _ in
+            self?.shareAnnotatedImage(record)
+        })
+        
+        // Share CSV data
+        alert.addAction(UIAlertAction(title: "分享 CSV 資料", style: .default) { [weak self] _ in
+            self?.shareCSVData(record)
+        })
+        
+        // Share both
+        alert.addAction(UIAlertAction(title: "分享全部", style: .default) { [weak self] _ in
+            self?.shareAll(record)
+        })
+        
+        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+        
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = shareButton
+            popover.sourceRect = shareButton.bounds
+        }
+        
+        present(alert, animated: true)
+    }
+    
+    // MARK: - Save Methods
+    
+    private func saveAnnotatedImageToPhotoLibrary(_ record: MeasurementRecord) {
+        do {
+            let annotatedImage = try ExportManager.shared.createAnnotatedImage(from: record)
+            UIImageWriteToSavedPhotosAlbum(annotatedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+        } catch {
+            showError("影像標註失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func saveMeasurementRecord(_ record: MeasurementRecord) {
+        do {
+            try DataManager.shared.saveMeasurementRecord(record)
+            showSuccess("測量記錄已儲存")
+        } catch {
+            showError("儲存失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func exportAsCSV(_ record: MeasurementRecord) {
+        do {
+            let csvString = try ExportManager.shared.exportRecordToCSV(record)
+            let fileURL = try ExportManager.shared.saveCSVToFile(csvString, filename: "measurement_\(record.id.uuidString).csv")
+            showSuccess("CSV 已匯出到: \(fileURL.lastPathComponent)")
+            
+            // Optionally share the file
+            shareFile(at: fileURL)
+        } catch {
+            showError("CSV 匯出失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func exportAll(_ record: MeasurementRecord) {
+        do {
+            // Export annotated image
+            let annotatedImage = try ExportManager.shared.createAnnotatedImage(from: record)
+            let imageURL = try ExportManager.shared.saveAnnotatedImageToFile(
+                annotatedImage, 
+                filename: "measurement_\(record.id.uuidString).jpg"
+            )
+            
+            // Export CSV
+            let csvString = try ExportManager.shared.exportRecordToCSV(record)
+            let csvURL = try ExportManager.shared.saveCSVToFile(
+                csvString, 
+                filename: "measurement_\(record.id.uuidString).csv"
+            )
+            
+            // Save to Core Data
+            try DataManager.shared.saveMeasurementRecord(record)
+            
+            showSuccess("已匯出影像和 CSV，並儲存測量記錄")
+            
+            // Share both files
+            shareFiles(at: [imageURL, csvURL])
+        } catch {
+            showError("匯出失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    // MARK: - Share Methods
+    
+    private func shareAnnotatedImage(_ record: MeasurementRecord) {
+        do {
+            let annotatedImage = try ExportManager.shared.createAnnotatedImage(from: record)
+            let activityVC = UIActivityViewController(activityItems: [annotatedImage], applicationActivities: nil)
+            activityVC.popoverPresentationController?.sourceView = shareButton
+            present(activityVC, animated: true)
+        } catch {
+            showError("影像標註失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func shareCSVData(_ record: MeasurementRecord) {
+        do {
+            let csvString = try ExportManager.shared.exportRecordToCSV(record)
+            let fileURL = try ExportManager.shared.saveCSVToFile(csvString, filename: "measurement_\(record.id.uuidString).csv")
+            shareFile(at: fileURL)
+        } catch {
+            showError("CSV 匯出失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func shareAll(_ record: MeasurementRecord) {
+        do {
+            // Create annotated image
+            let annotatedImage = try ExportManager.shared.createAnnotatedImage(from: record)
+            let imageURL = try ExportManager.shared.saveAnnotatedImageToFile(
+                annotatedImage, 
+                filename: "measurement_\(record.id.uuidString).jpg"
+            )
+            
+            // Create CSV
+            let csvString = try ExportManager.shared.exportRecordToCSV(record)
+            let csvURL = try ExportManager.shared.saveCSVToFile(
+                csvString, 
+                filename: "measurement_\(record.id.uuidString).csv"
+            )
+            
+            shareFiles(at: [imageURL, csvURL])
+        } catch {
+            showError("匯出失敗: \(error.localizedDescription)")
+        }
+    }
+    
+    private func shareFile(at url: URL) {
+        let activityVC = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activityVC.popoverPresentationController?.sourceView = shareButton
+        present(activityVC, animated: true)
+    }
+    
+    private func shareFiles(at urls: [URL]) {
+        let activityVC = UIActivityViewController(activityItems: urls, applicationActivities: nil)
+        activityVC.popoverPresentationController?.sourceView = shareButton
+        present(activityVC, animated: true)
     }
     
     private func showError(_ message: String) {
