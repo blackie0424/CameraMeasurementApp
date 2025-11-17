@@ -1,24 +1,633 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.16" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23504"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Camera Measurement View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="CameraMeasurementApp" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <subviews>
+                            <!-- AR Scene Container View -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="arSceneContainer">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            
+                            <!-- Measurement Overlay View -->
+                            <view contentMode="scaleToFill" userInteractionEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="measurementOverlay">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            
+                            <!-- Status Label -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="正在初始化相機..." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="statusLabel">
+                                <rect key="frame" x="20" y="79" width="313" height="30"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.69999999999999996" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="30" id="statusLabelHeight"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="8"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </label>
+                            
+                            <!-- Settings Button -->
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="settingsButton">
+                                <rect key="frame" x="333" y="79" width="40" height="40"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.5" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="40" id="settingsButtonWidth"/>
+                                    <constraint firstAttribute="height" constant="40" id="settingsButtonHeight"/>
+                                </constraints>
+                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" image="gear" catalog="system"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="20"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="settingsButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="settingsAction"/>
+                                    <segue destination="settings-nav" kind="presentation" identifier="showSettings" modalPresentationStyle="pageSheet" id="showSettingsSegue"/>
+                                </connections>
+                            </button>
+                            
+                            <!-- Guidance Label -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="將相機對準物體，確保物體完整顯示在畫面中" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="guidanceLabel">
+                                <rect key="frame" x="40" y="386" width="313" height="80"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="80" id="guidanceLabelHeight"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="12"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                            </label>
+                            
+                            <!-- Capture Button -->
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="captureButton">
+                                <rect key="frame" x="136.66666666666666" y="718" width="120" height="70"/>
+                                <color key="backgroundColor" systemColor="systemBlueColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="120" id="captureButtonWidth"/>
+                                    <constraint firstAttribute="height" constant="70" id="captureButtonHeight"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" title="拍照測量">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="35"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                </userDefinedRuntimeAttributes>
+                                <connections>
+                                    <action selector="captureButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="captureAction"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <!-- AR Scene Container Constraints -->
+                            <constraint firstItem="arSceneContainer" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="arSceneTop"/>
+                            <constraint firstItem="arSceneContainer" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="arSceneLeading"/>
+                            <constraint firstItem="arSceneContainer" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailing" id="arSceneTrailing"/>
+                            <constraint firstItem="arSceneContainer" firstAttribute="bottom" secondItem="8bC-Xf-vdC" secondAttribute="bottom" id="arSceneBottom"/>
+                            
+                            <!-- Measurement Overlay Constraints -->
+                            <constraint firstItem="measurementOverlay" firstAttribute="top" secondItem="arSceneContainer" secondAttribute="top" id="overlayTop"/>
+                            <constraint firstItem="measurementOverlay" firstAttribute="leading" secondItem="arSceneContainer" secondAttribute="leading" id="overlayLeading"/>
+                            <constraint firstItem="measurementOverlay" firstAttribute="trailing" secondItem="arSceneContainer" secondAttribute="trailing" id="overlayTrailing"/>
+                            <constraint firstItem="measurementOverlay" firstAttribute="bottom" secondItem="arSceneContainer" secondAttribute="bottom" id="overlayBottom"/>
+                            
+                            <!-- Status Label Constraints -->
+                            <constraint firstItem="statusLabel" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="statusLabelTop"/>
+                            <constraint firstItem="statusLabel" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="statusLabelLeading"/>
+                            <constraint firstItem="settingsButton" firstAttribute="leading" secondItem="statusLabel" secondAttribute="trailing" constant="10" id="statusLabelToSettings"/>
+                            
+                            <!-- Settings Button Constraints -->
+                            <constraint firstItem="settingsButton" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="settingsButtonTop"/>
+                            <constraint firstItem="settingsButton" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-20" id="settingsButtonTrailing"/>
+                            
+                            <!-- Guidance Label Constraints -->
+                            <constraint firstItem="guidanceLabel" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="guidanceLabelCenterX"/>
+                            <constraint firstItem="guidanceLabel" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="guidanceLabelCenterY"/>
+                            <constraint firstItem="guidanceLabel" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="40" id="guidanceLabelLeading"/>
+                            <constraint firstItem="guidanceLabel" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-40" id="guidanceLabelTrailing"/>
+                            
+                            <!-- Capture Button Constraints -->
+                            <constraint firstItem="captureButton" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="captureButtonCenterX"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="captureButton" secondAttribute="bottom" constant="30" id="captureButtonBottom"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <connections>
+                        <outlet property="arSceneView" destination="arSceneContainer" id="arSceneViewOutlet"/>
+                        <outlet property="captureButton" destination="captureButton" id="captureButtonOutlet"/>
+                        <outlet property="guidanceLabel" destination="guidanceLabel" id="guidanceLabelOutlet"/>
+                        <outlet property="measurementOverlayView" destination="measurementOverlay" id="measurementOverlayOutlet"/>
+                        <outlet property="settingsButton" destination="settingsButton" id="settingsButtonOutlet"/>
+                        <outlet property="statusLabel" destination="statusLabel" id="statusLabelOutlet"/>
+                        <segue destination="results-vc" kind="presentation" identifier="showResults" modalPresentationStyle="fullScreen" id="showResultsSegue"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="132" y="-27"/>
+        </scene>
+        
+        <!--Results View Controller-->
+        <scene sceneID="results-scene">
+            <objects>
+                <viewController storyboardIdentifier="ResultsViewController" id="results-vc" customClass="ResultsViewController" customModule="CameraMeasurementApp" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="results-view">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <!-- Result Image View -->
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="resultImageView">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </imageView>
+                            
+                            <!-- Measurement Overlay View -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="measurementOverlayView" customClass="MeasurementOverlayView" customModule="CameraMeasurementApp" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            
+                            <!-- Reference Object View -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="referenceObjectView" customClass="ReferenceObjectView" customModule="CameraMeasurementApp" customModuleProvider="target">
+                                <rect key="frame" x="20" y="79" width="150" height="150"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.5" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="150" id="refObjWidth"/>
+                                    <constraint firstAttribute="height" constant="150" id="refObjHeight"/>
+                                </constraints>
+                            </view>
+                            
+                            <!-- Measurement Info View -->
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="measurementInfoView">
+                                <rect key="frame" x="20" y="652" width="353" height="150"/>
+                                <subviews>
+                                    <!-- Object Name Label -->
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="物體名稱" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="objectNameLabel">
+                                        <rect key="frame" x="16" y="16" width="321" height="22"/>
+                                        <fontDescription key="fontDescription" type="boldSystem" pointSize="18"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    
+                                    <!-- Dimensions Label -->
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="尺寸: 0.0cm × 0.0cm × 0.0cm" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dimensionsLabel">
+                                        <rect key="frame" x="16" y="46" width="321" height="40"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="40" id="dimLabelHeight"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    
+                                    <!-- Accuracy Label -->
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="準確度: 95%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="accuracyLabel">
+                                        <rect key="frame" x="16" y="94" width="321" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <color key="textColor" systemColor="systemGrayColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    
+                                    <!-- Reference Object Label -->
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="參考物件: 打火機" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="referenceObjectLabel">
+                                        <rect key="frame" x="16" y="119" width="321" height="17"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <color key="textColor" systemColor="systemGray2Color"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="0.69999999999999996" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="150" id="infoViewHeight"/>
+                                    <constraint firstItem="objectNameLabel" firstAttribute="top" secondItem="measurementInfoView" secondAttribute="top" constant="16" id="objNameTop"/>
+                                    <constraint firstItem="objectNameLabel" firstAttribute="leading" secondItem="measurementInfoView" secondAttribute="leading" constant="16" id="objNameLeading"/>
+                                    <constraint firstAttribute="trailing" secondItem="objectNameLabel" secondAttribute="trailing" constant="16" id="objNameTrailing"/>
+                                    <constraint firstItem="dimensionsLabel" firstAttribute="top" secondItem="objectNameLabel" secondAttribute="bottom" constant="8" id="dimTop"/>
+                                    <constraint firstItem="dimensionsLabel" firstAttribute="leading" secondItem="measurementInfoView" secondAttribute="leading" constant="16" id="dimLeading"/>
+                                    <constraint firstAttribute="trailing" secondItem="dimensionsLabel" secondAttribute="trailing" constant="16" id="dimTrailing"/>
+                                    <constraint firstItem="accuracyLabel" firstAttribute="top" secondItem="dimensionsLabel" secondAttribute="bottom" constant="8" id="accTop"/>
+                                    <constraint firstItem="accuracyLabel" firstAttribute="leading" secondItem="measurementInfoView" secondAttribute="leading" constant="16" id="accLeading"/>
+                                    <constraint firstAttribute="trailing" secondItem="accuracyLabel" secondAttribute="trailing" constant="16" id="accTrailing"/>
+                                    <constraint firstItem="referenceObjectLabel" firstAttribute="top" secondItem="accuracyLabel" secondAttribute="bottom" constant="8" id="refTop"/>
+                                    <constraint firstItem="referenceObjectLabel" firstAttribute="leading" secondItem="measurementInfoView" secondAttribute="leading" constant="16" id="refLeading"/>
+                                    <constraint firstAttribute="trailing" secondItem="referenceObjectLabel" secondAttribute="trailing" constant="16" id="refTrailing"/>
+                                </constraints>
+                            </view>
+                            
+                            <!-- Button Stack View -->
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="horizontal" distribution="fillEqually" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="buttonStackView">
+                                <rect key="frame" x="20" y="572" width="353" height="44"/>
+                                <subviews>
+                                    <!-- Save Button -->
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="saveButton">
+                                        <rect key="frame" x="0.0" y="0.0" width="109.66666666666667" height="44"/>
+                                        <color key="backgroundColor" systemColor="systemGreenColor"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="儲存">
+                                            <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="saveButtonTapped:" destination="results-vc" eventType="touchUpInside" id="saveAction"/>
+                                        </connections>
+                                    </button>
+                                    
+                                    <!-- Share Button -->
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="shareButton">
+                                        <rect key="frame" x="121.66666666666669" y="0.0" width="109.66666666666669" height="44"/>
+                                        <color key="backgroundColor" systemColor="systemBlueColor"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="分享">
+                                            <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="shareButtonTapped:" destination="results-vc" eventType="touchUpInside" id="shareAction"/>
+                                        </connections>
+                                    </button>
+                                    
+                                    <!-- Retake Button -->
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="retakeButton">
+                                        <rect key="frame" x="243.33333333333331" y="0.0" width="109.66666666666669" height="44"/>
+                                        <color key="backgroundColor" systemColor="systemGrayColor"/>
+                                        <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="重新拍攝">
+                                            <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="retakeButtonTapped:" destination="results-vc" eventType="touchUpInside" id="retakeAction"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="44" id="buttonStackHeight"/>
+                                </constraints>
+                            </stackView>
+                            
+                            <!-- Change Reference Button -->
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="changeReferenceButton">
+                                <rect key="frame" x="20" y="237" width="150" height="36"/>
+                                <color key="backgroundColor" systemColor="systemOrangeColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="36" id="changeRefHeight"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                <state key="normal" title="更換參考物件">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                                <connections>
+                                    <action selector="changeReferenceButtonTapped:" destination="results-vc" eventType="touchUpInside" id="changeRefAction"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <!-- Result Image View Constraints -->
+                            <constraint firstItem="resultImageView" firstAttribute="top" secondItem="results-view" secondAttribute="top" id="resultImgTop"/>
+                            <constraint firstItem="resultImageView" firstAttribute="leading" secondItem="results-view" secondAttribute="leading" id="resultImgLeading"/>
+                            <constraint firstItem="resultImageView" firstAttribute="trailing" secondItem="results-view" secondAttribute="trailing" id="resultImgTrailing"/>
+                            <constraint firstItem="resultImageView" firstAttribute="bottom" secondItem="results-view" secondAttribute="bottom" id="resultImgBottom"/>
+                            
+                            <!-- Measurement Overlay Constraints -->
+                            <constraint firstItem="measurementOverlayView" firstAttribute="top" secondItem="resultImageView" secondAttribute="top" id="resultsOverlayTop"/>
+                            <constraint firstItem="measurementOverlayView" firstAttribute="leading" secondItem="resultImageView" secondAttribute="leading" id="resultsOverlayLeading"/>
+                            <constraint firstItem="measurementOverlayView" firstAttribute="trailing" secondItem="resultImageView" secondAttribute="trailing" id="resultsOverlayTrailing"/>
+                            <constraint firstItem="measurementOverlayView" firstAttribute="bottom" secondItem="resultImageView" secondAttribute="bottom" id="resultsOverlayBottom"/>
+                            
+                            <!-- Reference Object View Constraints -->
+                            <constraint firstItem="referenceObjectView" firstAttribute="top" secondItem="results-safe-area" secondAttribute="top" constant="20" id="refObjTop"/>
+                            <constraint firstItem="referenceObjectView" firstAttribute="leading" secondItem="results-safe-area" secondAttribute="leading" constant="20" id="refObjLeading"/>
+                            
+                            <!-- Change Reference Button Constraints -->
+                            <constraint firstItem="changeReferenceButton" firstAttribute="top" secondItem="referenceObjectView" secondAttribute="bottom" constant="8" id="changeRefTop"/>
+                            <constraint firstItem="changeReferenceButton" firstAttribute="leading" secondItem="referenceObjectView" secondAttribute="leading" id="changeRefLeading"/>
+                            <constraint firstItem="changeReferenceButton" firstAttribute="trailing" secondItem="referenceObjectView" secondAttribute="trailing" id="changeRefTrailing"/>
+                            
+                            <!-- Button Stack View Constraints -->
+                            <constraint firstItem="buttonStackView" firstAttribute="leading" secondItem="results-safe-area" secondAttribute="leading" constant="20" id="btnStackLeading"/>
+                            <constraint firstItem="buttonStackView" firstAttribute="trailing" secondItem="results-safe-area" secondAttribute="trailing" constant="-20" id="btnStackTrailing"/>
+                            <constraint firstItem="measurementInfoView" firstAttribute="top" secondItem="buttonStackView" secondAttribute="bottom" constant="36" id="btnStackToInfo"/>
+                            
+                            <!-- Measurement Info View Constraints -->
+                            <constraint firstItem="measurementInfoView" firstAttribute="leading" secondItem="results-safe-area" secondAttribute="leading" constant="20" id="infoViewLeading"/>
+                            <constraint firstItem="measurementInfoView" firstAttribute="trailing" secondItem="results-safe-area" secondAttribute="trailing" constant="-20" id="infoViewTrailing"/>
+                            <constraint firstItem="results-safe-area" firstAttribute="bottom" secondItem="measurementInfoView" secondAttribute="bottom" constant="16" id="infoViewBottom"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="results-safe-area"/>
+                    </view>
+                    <connections>
+                        <outlet property="accuracyLabel" destination="accuracyLabel" id="accuracyLabelOutlet"/>
+                        <outlet property="changeReferenceButton" destination="changeReferenceButton" id="changeRefButtonOutlet"/>
+                        <outlet property="dimensionsLabel" destination="dimensionsLabel" id="dimensionsLabelOutlet"/>
+                        <outlet property="measurementInfoView" destination="measurementInfoView" id="measurementInfoViewOutlet"/>
+                        <outlet property="measurementOverlayView" destination="measurementOverlayView" id="measurementOverlayViewOutlet"/>
+                        <outlet property="objectNameLabel" destination="objectNameLabel" id="objectNameLabelOutlet"/>
+                        <outlet property="referenceObjectLabel" destination="referenceObjectLabel" id="referenceObjectLabelOutlet"/>
+                        <outlet property="referenceObjectView" destination="referenceObjectView" id="referenceObjectViewOutlet"/>
+                        <outlet property="resultImageView" destination="resultImageView" id="resultImageViewOutlet"/>
+                        <outlet property="retakeButton" destination="retakeButton" id="retakeButtonOutlet"/>
+                        <outlet property="saveButton" destination="saveButton" id="saveButtonOutlet"/>
+                        <outlet property="shareButton" destination="shareButton" id="shareButtonOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="results-first-responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="900" y="-27"/>
+        </scene>
+        
+        <!--Settings Navigation Controller-->
+        <scene sceneID="settings-nav-scene">
+            <objects>
+                <navigationController automaticallyAdjustsScrollViewInsets="NO" id="settings-nav" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="settings-nav-bar">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="56"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="settings-vc" kind="relationship" relationship="rootViewController" id="settings-root-segue"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="settings-nav-first-responder" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="132" y="700"/>
+        </scene>
+        
+        <!--Settings View Controller-->
+        <scene sceneID="settings-scene">
+            <objects>
+                <viewController storyboardIdentifier="SettingsViewController" id="settings-vc" customClass="SettingsViewController" customModule="CameraMeasurementApp" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="settings-view">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <!-- Scroll View -->
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="settingsScrollView">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <subviews>
+                                    <!-- Content View -->
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="settingsContentView">
+                                        <rect key="frame" x="0.0" y="0.0" width="393" height="600"/>
+                                        <subviews>
+                                            <!-- Measurement Unit Section -->
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="測量單位" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="unitLabel">
+                                                <rect key="frame" x="20" y="20" width="353" height="24"/>
+                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            
+                                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="unitSegmentedControl">
+                                                <rect key="frame" x="20" y="54" width="353" height="32"/>
+                                                <segments>
+                                                    <segment title="公分 (cm)"/>
+                                                    <segment title="英吋 (inch)"/>
+                                                </segments>
+                                                <connections>
+                                                    <action selector="unitSegmentedControlChanged:" destination="settings-vc" eventType="valueChanged" id="unitSegmentAction"/>
+                                                </connections>
+                                            </segmentedControl>
+                                            
+                                            <!-- Separator 1 -->
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="separator1">
+                                                <rect key="frame" x="20" y="105" width="353" height="1"/>
+                                                <color key="backgroundColor" systemColor="separatorColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="1" id="sep1Height"/>
+                                                </constraints>
+                                            </view>
+                                            
+                                            <!-- Reference Object Section -->
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="參考物件偏好" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="referenceLabel">
+                                                <rect key="frame" x="20" y="126" width="353" height="24"/>
+                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            
+                                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" scrollEnabled="NO" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="defaultReferenceTableView">
+                                                <rect key="frame" x="20" y="160" width="353" height="220"/>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="220" id="tableViewHeight"/>
+                                                </constraints>
+                                            </tableView>
+                                            
+                                            <!-- Separator 2 -->
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="separator2">
+                                                <rect key="frame" x="20" y="400" width="353" height="1"/>
+                                                <color key="backgroundColor" systemColor="separatorColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="1" id="sep2Height"/>
+                                                </constraints>
+                                            </view>
+                                            
+                                            <!-- Other Settings Section -->
+                                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="其他設定" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="otherSettingsLabel">
+                                                <rect key="frame" x="20" y="421" width="353" height="24"/>
+                                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                                <nil key="textColor"/>
+                                                <nil key="highlightedColor"/>
+                                            </label>
+                                            
+                                            <!-- Show Guidance Row -->
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="guidanceRow">
+                                                <rect key="frame" x="20" y="465" width="353" height="44"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="顯示操作引導" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="guidanceRowLabel">
+                                                        <rect key="frame" x="0.0" y="11.666666666666664" width="112" height="20.333333333333336"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="showGuidanceSwitch">
+                                                        <rect key="frame" x="304" y="6.6666666666666572" width="51" height="31"/>
+                                                        <connections>
+                                                            <action selector="showGuidanceSwitchChanged:" destination="settings-vc" eventType="valueChanged" id="guidanceSwitchAction"/>
+                                                        </connections>
+                                                    </switch>
+                                                </subviews>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="44" id="guidanceRowHeight"/>
+                                                    <constraint firstItem="guidanceRowLabel" firstAttribute="leading" secondItem="guidanceRow" secondAttribute="leading" id="guidanceRowLabelLeading"/>
+                                                    <constraint firstItem="guidanceRowLabel" firstAttribute="centerY" secondItem="guidanceRow" secondAttribute="centerY" id="guidanceRowLabelCenterY"/>
+                                                    <constraint firstAttribute="trailing" secondItem="showGuidanceSwitch" secondAttribute="trailing" id="guidanceSwitchTrailing"/>
+                                                    <constraint firstItem="showGuidanceSwitch" firstAttribute="centerY" secondItem="guidanceRow" secondAttribute="centerY" id="guidanceSwitchCenterY"/>
+                                                </constraints>
+                                            </view>
+                                            
+                                            <!-- Auto Save Row -->
+                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="autoSaveRow">
+                                                <rect key="frame" x="20" y="529" width="353" height="44"/>
+                                                <subviews>
+                                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="自動儲存測量結果" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="autoSaveRowLabel">
+                                                        <rect key="frame" x="0.0" y="11.666666666666629" width="144" height="20.333333333333329"/>
+                                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                        <nil key="textColor"/>
+                                                        <nil key="highlightedColor"/>
+                                                    </label>
+                                                    <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="autoSaveSwitch">
+                                                        <rect key="frame" x="304" y="6.6666666666666288" width="51" height="31"/>
+                                                        <connections>
+                                                            <action selector="autoSaveSwitchChanged:" destination="settings-vc" eventType="valueChanged" id="autoSaveSwitchAction"/>
+                                                        </connections>
+                                                    </switch>
+                                                </subviews>
+                                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="44" id="autoSaveRowHeight"/>
+                                                    <constraint firstItem="autoSaveRowLabel" firstAttribute="leading" secondItem="autoSaveRow" secondAttribute="leading" id="autoSaveRowLabelLeading"/>
+                                                    <constraint firstItem="autoSaveRowLabel" firstAttribute="centerY" secondItem="autoSaveRow" secondAttribute="centerY" id="autoSaveRowLabelCenterY"/>
+                                                    <constraint firstAttribute="trailing" secondItem="autoSaveSwitch" secondAttribute="trailing" id="autoSaveSwitchTrailing"/>
+                                                    <constraint firstItem="autoSaveSwitch" firstAttribute="centerY" secondItem="autoSaveRow" secondAttribute="centerY" id="autoSaveSwitchCenterY"/>
+                                                </constraints>
+                                            </view>
+                                        </subviews>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="600" id="contentViewHeight"/>
+                                            
+                                            <!-- Unit Label Constraints -->
+                                            <constraint firstItem="unitLabel" firstAttribute="top" secondItem="settingsContentView" secondAttribute="top" constant="20" id="unitLabelTop"/>
+                                            <constraint firstItem="unitLabel" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="unitLabelLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="unitLabel" secondAttribute="trailing" constant="20" id="unitLabelTrailing"/>
+                                            
+                                            <!-- Unit Segmented Control Constraints -->
+                                            <constraint firstItem="unitSegmentedControl" firstAttribute="top" secondItem="unitLabel" secondAttribute="bottom" constant="10" id="unitSegmentTop"/>
+                                            <constraint firstItem="unitSegmentedControl" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="unitSegmentLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="unitSegmentedControl" secondAttribute="trailing" constant="20" id="unitSegmentTrailing"/>
+                                            
+                                            <!-- Separator 1 Constraints -->
+                                            <constraint firstItem="separator1" firstAttribute="top" secondItem="unitSegmentedControl" secondAttribute="bottom" constant="20" id="sep1Top"/>
+                                            <constraint firstItem="separator1" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="sep1Leading"/>
+                                            <constraint firstAttribute="trailing" secondItem="separator1" secondAttribute="trailing" constant="20" id="sep1Trailing"/>
+                                            
+                                            <!-- Reference Label Constraints -->
+                                            <constraint firstItem="referenceLabel" firstAttribute="top" secondItem="separator1" secondAttribute="bottom" constant="20" id="refLabelTop"/>
+                                            <constraint firstItem="referenceLabel" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="refLabelLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="referenceLabel" secondAttribute="trailing" constant="20" id="refLabelTrailing"/>
+                                            
+                                            <!-- Table View Constraints -->
+                                            <constraint firstItem="defaultReferenceTableView" firstAttribute="top" secondItem="referenceLabel" secondAttribute="bottom" constant="10" id="tableViewTop"/>
+                                            <constraint firstItem="defaultReferenceTableView" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="tableViewLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="defaultReferenceTableView" secondAttribute="trailing" constant="20" id="tableViewTrailing"/>
+                                            
+                                            <!-- Separator 2 Constraints -->
+                                            <constraint firstItem="separator2" firstAttribute="top" secondItem="defaultReferenceTableView" secondAttribute="bottom" constant="20" id="sep2Top"/>
+                                            <constraint firstItem="separator2" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="sep2Leading"/>
+                                            <constraint firstAttribute="trailing" secondItem="separator2" secondAttribute="trailing" constant="20" id="sep2Trailing"/>
+                                            
+                                            <!-- Other Settings Label Constraints -->
+                                            <constraint firstItem="otherSettingsLabel" firstAttribute="top" secondItem="separator2" secondAttribute="bottom" constant="20" id="otherLabelTop"/>
+                                            <constraint firstItem="otherSettingsLabel" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="otherLabelLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="otherSettingsLabel" secondAttribute="trailing" constant="20" id="otherLabelTrailing"/>
+                                            
+                                            <!-- Guidance Row Constraints -->
+                                            <constraint firstItem="guidanceRow" firstAttribute="top" secondItem="otherSettingsLabel" secondAttribute="bottom" constant="20" id="guidanceRowTop"/>
+                                            <constraint firstItem="guidanceRow" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="guidanceRowLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="guidanceRow" secondAttribute="trailing" constant="20" id="guidanceRowTrailing"/>
+                                            
+                                            <!-- Auto Save Row Constraints -->
+                                            <constraint firstItem="autoSaveRow" firstAttribute="top" secondItem="guidanceRow" secondAttribute="bottom" constant="20" id="autoSaveRowTop"/>
+                                            <constraint firstItem="autoSaveRow" firstAttribute="leading" secondItem="settingsContentView" secondAttribute="leading" constant="20" id="autoSaveRowLeading"/>
+                                            <constraint firstAttribute="trailing" secondItem="autoSaveRow" secondAttribute="trailing" constant="20" id="autoSaveRowTrailing"/>
+                                        </constraints>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <!-- Content View Constraints -->
+                                    <constraint firstItem="settingsContentView" firstAttribute="top" secondItem="settingsScrollView" secondAttribute="top" id="contentViewTop"/>
+                                    <constraint firstItem="settingsContentView" firstAttribute="leading" secondItem="settingsScrollView" secondAttribute="leading" id="contentViewLeading"/>
+                                    <constraint firstItem="settingsContentView" firstAttribute="trailing" secondItem="settingsScrollView" secondAttribute="trailing" id="contentViewTrailing"/>
+                                    <constraint firstItem="settingsContentView" firstAttribute="bottom" secondItem="settingsScrollView" secondAttribute="bottom" id="contentViewBottom"/>
+                                    <constraint firstItem="settingsContentView" firstAttribute="width" secondItem="settingsScrollView" secondAttribute="width" id="contentViewWidth"/>
+                                </constraints>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <!-- Scroll View Constraints -->
+                            <constraint firstItem="settingsScrollView" firstAttribute="top" secondItem="settings-view" secondAttribute="top" id="scrollViewTop"/>
+                            <constraint firstItem="settingsScrollView" firstAttribute="leading" secondItem="settings-view" secondAttribute="leading" id="scrollViewLeading"/>
+                            <constraint firstItem="settingsScrollView" firstAttribute="trailing" secondItem="settings-view" secondAttribute="trailing" id="scrollViewTrailing"/>
+                            <constraint firstItem="settingsScrollView" firstAttribute="bottom" secondItem="settings-view" secondAttribute="bottom" id="scrollViewBottom"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="settings-safe-area"/>
+                    </view>
+                    <navigationItem key="navigationItem" title="設定" id="settings-nav-item"/>
+                    <connections>
+                        <outlet property="autoSaveSwitch" destination="autoSaveSwitch" id="autoSaveSwitchOutlet"/>
+                        <outlet property="defaultReferenceTableView" destination="defaultReferenceTableView" id="defaultReferenceTableViewOutlet"/>
+                        <outlet property="showGuidanceSwitch" destination="showGuidanceSwitch" id="showGuidanceSwitchOutlet"/>
+                        <outlet property="unitSegmentedControl" destination="unitSegmentedControl" id="unitSegmentedControlOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="settings-first-responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="900" y="700"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="gear" catalog="system" width="128" height="119"/>
+        <systemColor name="separatorColor">
+            <color red="0.23529411764705882" green="0.23529411764705882" blue="0.2627450980392157" alpha="0.28999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemBlueColor">
+            <color red="0.0" green="0.47843137254901963" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemGray2Color">
+            <color red="0.68235294117647061" green="0.68235294117647061" blue="0.69803921568627447" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemGrayColor">
+            <color red="0.55686274509803924" green="0.55686274509803924" blue="0.57647058823529407" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemGreenColor">
+            <color red="0.20392156862745098" green="0.78039215686274508" blue="0.34901960784313724" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+        <systemColor name="systemOrangeColor">
+            <color red="1" green="0.58431372549019611" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
 </document>
