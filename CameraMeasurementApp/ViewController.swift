@@ -28,23 +28,31 @@ class ViewController: UIViewController {
     private var currentMeasurementRecord: MeasurementRecord?
     private var isCapturing = false
     
+    private let settingsManager = SettingsManager.shared
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupCameraMeasurement()
         checkPermissions()
+        setupNotifications()
         showInitialGuidance()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         startARSession()
+        applySettings()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopARSession()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - Setup Methods
@@ -57,6 +65,42 @@ class ViewController: UIViewController {
         // Configure guidance label padding
         guidanceLabel.layer.masksToBounds = true
         guidanceLabel.clipsToBounds = true
+    }
+    
+    private func setupNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSettingsChange),
+            name: .settingsDidChange,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMeasurementUnitChange),
+            name: .measurementUnitDidChange,
+            object: nil
+        )
+    }
+    
+    private func applySettings() {
+        // Apply current settings to the UI and behavior
+        let shouldShowGuidance = settingsManager.shouldShowGuidance
+        
+        if shouldShowGuidance {
+            showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
+        } else {
+            hideGuidance()
+        }
+    }
+    
+    @objc private func handleSettingsChange() {
+        applySettings()
+    }
+    
+    @objc private func handleMeasurementUnitChange() {
+        // Refresh any displayed measurements with new unit
+        updateStatusLabel("測量單位已更新為 \(settingsManager.measurementUnit.name)")
     }
     
     private func setupCameraMeasurement() {
@@ -211,7 +255,8 @@ class ViewController: UIViewController {
     
     private func showInitialGuidance() {
         // Check if this is the first time user is using the app
-        let hasSeenGuidance = UserDefaults.standard.bool(forKey: "hasSeenInitialGuidance")
+        let hasSeenGuidance = settingsManager.hasSeenInitialGuidance
+        let shouldShowGuidance = settingsManager.shouldShowGuidance
         
         if !hasSeenGuidance {
             showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
@@ -220,7 +265,7 @@ class ViewController: UIViewController {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 self?.showFirstTimeUserTutorial()
             }
-        } else {
+        } else if shouldShowGuidance {
             // Show brief guidance for returning users
             showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
             
@@ -281,8 +326,8 @@ class ViewController: UIViewController {
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "開始使用", style: .default) { _ in
-            UserDefaults.standard.set(true, forKey: "hasSeenInitialGuidance")
+        alert.addAction(UIAlertAction(title: "開始使用", style: .default) { [weak self] _ in
+            self?.settingsManager.hasSeenInitialGuidance = true
         })
         
         present(alert, animated: true)
