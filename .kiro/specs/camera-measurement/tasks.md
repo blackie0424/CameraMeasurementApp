@@ -2,42 +2,42 @@
 
 ## 第一階段：基礎設定和 UI 介面 (可在模擬器中測試)
 
-- [ ] 1. 設定專案依賴和核心介面
+- [x] 1. 設定專案依賴和核心介面
 
   - 在 Info.plist 中添加相機和 ARKit 權限設定
   - 定義核心協議和資料模型檔案
   - 在現有 ViewController 基礎上建立相機測量功能
   - _需求: 1.1, 5.1_
 
-- [ ] 2. 建立資料模型和協議定義
+- [x] 2. 建立資料模型和協議定義
 
   - 建立 DetectedObject、ObjectDimensions、ReferenceObject 資料模型
   - 定義 ARManagerProtocol、ObjectDetectorProtocol 等核心協議
   - 建立 MeasurementError 錯誤類型定義
   - _需求: 3.1, 3.4_
 
-- [ ] 3. 設計和實作主要相機介面
+- [x] 3. 設計和實作主要相機介面
 
   - 修改 Main.storyboard 添加 AR 相機介面元素
   - 在現有 ViewController 中實作拍照按鈕和設定選項
   - 建立即時預覽和引導提示 UI
   - _需求: 5.1, 5.2_
 
-- [ ] 4. 實作測量結果顯示介面
+- [x] 4. 實作測量結果顯示介面
 
   - 在 Main.storyboard 中添加結果顯示視圖控制器
   - 實作測量數值覆蓋顯示功能
   - 建立參考物件視覺化元件
   - _需求: 1.5, 2.4_
 
-- [ ] 5. 建立設定頁面和選項
+- [x] 5. 建立設定頁面和選項
 
   - 在 Main.storyboard 中添加 SettingsViewController
   - 實作測量單位選擇介面
   - 建立參考物件偏好設定頁面
   - _需求: 5.1_
 
-- [ ] 6. 設定 Storyboard 導航和 Segue
+- [x] 6. 設定 Storyboard 導航和 Segue
   - 在 Main.storyboard 中建立視圖控制器間的 segue
   - 實作導航控制器和頁面轉換
   - 設定 IBOutlet 和 IBAction 連接
