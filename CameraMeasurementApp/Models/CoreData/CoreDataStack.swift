@@ -98,24 +98,19 @@ class CoreDataStack {
     
     /// 驗證資料模型的完整性
     func validateDataModel() -> Bool {
-        do {
-            let model = persistentContainer.managedObjectModel
-            let entities = model.entities
-            
-            // 檢查必要的實體是否存在
-            let requiredEntities = ["MeasurementRecord", "DetectedObjectEntity", "ObjectDimensionsEntity"]
-            for entityName in requiredEntities {
-                guard entities.contains(where: { $0.name == entityName }) else {
-                    print("缺少必要的實體: \(entityName)")
-                    return false
-                }
+        let model = persistentContainer.managedObjectModel
+        let entities = model.entities
+        
+        // 檢查必要的實體是否存在
+        let requiredEntities = ["MeasurementRecord", "DetectedObjectEntity", "ObjectDimensionsEntity"]
+        for entityName in requiredEntities {
+            guard entities.contains(where: { $0.name == entityName }) else {
+                print("缺少必要的實體: \(entityName)")
+                return false
             }
-            
-            print("資料模型驗證成功")
-            return true
-        } catch {
-            print("資料模型驗證失敗: \(error)")
-            return false
         }
+        
+        print("資料模型驗證成功")
+        return true
     }
 }
