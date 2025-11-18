@@ -8,6 +8,7 @@
 import UIKit
 import AVFoundation
 import SceneKit
+import ARKit
 
 class ViewController: UIViewController {
     
@@ -20,13 +21,15 @@ class ViewController: UIViewController {
     @IBOutlet weak var guidanceLabel: UILabel!
     
     // MARK: - Properties
-    private var arManager: ARManagerProtocol?
+    private var sceneView: ARSCNView!
+    private var arManager: ARManager?
     private var objectDetector: ObjectDetectorProtocol?
     private var measurementCalculator: MeasurementCalculatorProtocol?
-    private var referenceObjectManager: ReferenceObjectManagerProtocol?
+    private var referenceObjectManager: ReferenceObjectManager?
     
     private var currentMeasurementRecord: MeasurementRecord?
     private var isCapturing = false
+    private var capturedImage: UIImage?
     
     private let settingsManager = SettingsManager.shared
     
@@ -65,6 +68,28 @@ class ViewController: UIViewController {
         // Configure guidance label padding
         guidanceLabel.layer.masksToBounds = true
         guidanceLabel.clipsToBounds = true
+        
+        // Setup ARSCNView
+        setupARSCNView()
+    }
+    
+    private func setupARSCNView() {
+        // Create ARSCNView
+        sceneView = ARSCNView(frame: arSceneView.bounds)
+        sceneView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        
+        // Configure scene view
+        sceneView.delegate = self
+        sceneView.showsStatistics = false
+        sceneView.debugOptions = []
+        
+        // Enable default lighting
+        sceneView.autoenablesDefaultLighting = true
+        sceneView.automaticallyUpdatesLighting = true
+        
+        // Add to container view
+        arSceneView.addSubview(sceneView)
+        arSceneView.sendSubviewToBack(sceneView)
     }
     
     private func setupNotifications() {
@@ -104,11 +129,14 @@ class ViewController: UIViewController {
     }
     
     private func setupCameraMeasurement() {
-        // Initialize core components (will be implemented in later tasks)
-        // arManager = ARManager()
-        // objectDetector = ObjectDetector()
-        // measurementCalculator = MeasurementCalculator()
-        // referenceObjectManager = ReferenceObjectManager()
+        // Initialize ARManager with the scene view
+        arManager = ARManager(arView: sceneView)
+        arManager?.delegate = self
+        
+        // Initialize core components
+        objectDetector = ObjectDetector()
+        measurementCalculator = MeasurementCalculator()
+        referenceObjectManager = ReferenceObjectManager.shared
         
         updateStatusLabel("相機測量系統已準備就緒")
     }
@@ -139,12 +167,18 @@ class ViewController: UIViewController {
     
     // MARK: - AR Session Management
     private func startARSession() {
-        // AR session will be started when ARManager is implemented
-        updateStatusLabel("相機測量系統已準備就緒")
+        guard ARWorldTrackingConfiguration.isSupported else {
+            updateStatusLabel("此裝置不支援 AR 功能")
+            handleError(.arSessionFailed)
+            return
+        }
+        
+        arManager?.startARSession()
+        updateStatusLabel("正在初始化 AR 會話...")
     }
     
     private func stopARSession() {
-        // AR session will be stopped when ARManager is implemented
+        arManager?.stopARSession()
         updateStatusLabel("相機測量系統已停止")
     }
     
@@ -168,70 +202,147 @@ class ViewController: UIViewController {
     
     // MARK: - Measurement Methods
     private func performMeasurement() {
-        // This is a placeholder implementation
-        // Actual measurement logic will be implemented in later tasks
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.isCapturing = false
-            self?.captureButton.isEnabled = true
-            self?.updateStatusLabel("測量完成")
+        // Capture current AR frame as image
+        captureARFrame { [weak self] image in
+            guard let self = self, let capturedImage = image else {
+                self?.isCapturing = false
+                self?.captureButton.isEnabled = true
+                self?.updateStatusLabel("拍照失敗")
+                return
+            }
             
-            // Create mock measurement data for testing the results display
-            self?.showMockResults()
+            self.capturedImage = capturedImage
+            
+            // Perform object detection and measurement
+            // This will be implemented in later tasks
+            self.processCapturedImage(capturedImage)
         }
     }
     
-    private func showMockResults() {
-        // Create mock data for testing the results display interface
-        guard let mockImage = createMockImage() else { return }
+    private func captureARFrame(completion: @escaping (UIImage?) -> Void) {
+        guard let frame = arManager?.getCurrentFrame() else {
+            completion(nil)
+            return
+        }
         
-        let mockDimensions = ObjectDimensions(
-            length: 15.5,
-            width: 8.2,
-            height: 3.0,
-            accuracy: 0.92
-        )
-        
-        let mockObject = DetectedObject(
-            boundingBox: CGRect(x: 100, y: 200, width: 200, height: 300),
-            objectType: .phone,
-            confidence: 0.95,
-            worldPosition: SCNVector3(0, 0, 0),
-            dimensions: mockDimensions
-        )
-        
-        let mockRecord = MeasurementRecord(
-            image: mockImage,
-            detectedObjects: [mockObject],
-            referenceObject: ReferenceObject.iPhone
-        )
-        
-        showResults(with: mockRecord)
+        // Convert ARFrame to UIImage
+        let image = imageFromARFrame(frame)
+        completion(image)
     }
     
-    private func createMockImage() -> UIImage? {
-        // Create a simple mock image for testing
-        let size = CGSize(width: 400, height: 600)
-        let renderer = UIGraphicsImageRenderer(size: size)
+    private func imageFromARFrame(_ frame: ARFrame) -> UIImage? {
+        let pixelBuffer = frame.capturedImage
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
         
-        return renderer.image { context in
-            // Draw background
-            UIColor.systemGray.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
+        // Create context
+        let context = CIContext()
+        
+        // Get device orientation for proper image orientation
+        let orientation = UIDevice.current.orientation
+        let imageOrientation: UIImage.Orientation
+        
+        switch orientation {
+        case .portrait:
+            imageOrientation = .right
+        case .portraitUpsideDown:
+            imageOrientation = .left
+        case .landscapeLeft:
+            imageOrientation = .up
+        case .landscapeRight:
+            imageOrientation = .down
+        default:
+            imageOrientation = .right
+        }
+        
+        // Render to CGImage
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+            return nil
+        }
+        
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
+    }
+    
+    private func processCapturedImage(_ image: UIImage) {
+        updateStatusLabel("正在分析影像...")
+        
+        // Perform real object detection and measurement
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
             
-            // Draw mock object
-            UIColor.systemBlue.setFill()
-            context.fill(CGRect(x: 100, y: 200, width: 200, height: 300))
-            
-            // Draw text
-            let text = "測試物體"
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 24, weight: .bold),
-                .foregroundColor: UIColor.white
-            ]
-            text.draw(at: CGPoint(x: 150, y: 340), withAttributes: attributes)
+            do {
+                // Step 1: Detect objects in the image
+                guard let detector = self.objectDetector else {
+                    throw MeasurementError.detectionFailed
+                }
+                
+                let detectedObjects = detector.detectObjects(in: image)
+                
+                guard !detectedObjects.isEmpty else {
+                    DispatchQueue.main.async {
+                        self.isCapturing = false
+                        self.captureButton.isEnabled = true
+                        self.updateStatusLabel("未檢測到物體，請重試")
+                        self.showGuidance("請確保物體清晰可見且光線充足")
+                    }
+                    return
+                }
+                
+                // Step 2: Calculate measurements for detected objects
+                guard let calculator = self.measurementCalculator,
+                      let frame = self.arManager?.getCurrentFrame() else {
+                    throw MeasurementError.measurementFailed
+                }
+                
+                var measuredObjects: [DetectedObject] = []
+                
+                for object in detectedObjects {
+                    // Calculate dimensions using AR depth information
+                    let dimensions = calculator.calculateDimensions(
+                        object: object,
+                        arFrame: frame
+                    )
+                    
+                    // Create new object with dimensions
+                    let measuredObject = DetectedObject(
+                        id: object.id,
+                        boundingBox: object.boundingBox,
+                        objectType: object.objectType,
+                        confidence: object.confidence,
+                        worldPosition: object.worldPosition,
+                        dimensions: dimensions
+                    )
+                    measuredObjects.append(measuredObject)
+                }
+                
+                // Step 3: Get reference object if available
+                let referenceObject = self.referenceObjectManager?.currentReference
+                
+                // Step 4: Create measurement record
+                let record = MeasurementRecord(
+                    image: image,
+                    detectedObjects: measuredObjects,
+                    referenceObject: referenceObject
+                )
+                
+                // Step 5: Show results on main thread
+                DispatchQueue.main.async {
+                    self.isCapturing = false
+                    self.captureButton.isEnabled = true
+                    self.updateStatusLabel("測量完成 - 檢測到 \(measuredObjects.count) 個物體")
+                    self.showResults(with: record)
+                }
+                
+            } catch {
+                DispatchQueue.main.async {
+                    self.isCapturing = false
+                    self.captureButton.isEnabled = true
+                    self.handleError(error as? MeasurementError ?? .unknown)
+                }
+            }
         }
     }
+    
+    // Mock methods removed - now using real detection and measurement
     
     private func showResults(with record: MeasurementRecord) {
         performSegue(withIdentifier: "showResults", sender: record)
@@ -393,3 +504,130 @@ class ViewController: UIViewController {
     }
 }
 
+
+// MARK: - ARSCNViewDelegate
+
+extension ViewController: ARSCNViewDelegate {
+    
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        // Update any real-time UI elements if needed
+    }
+    
+    func session(_ session: ARSession, didFailWithError error: Error) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話錯誤")
+            self?.handleError(.arSessionFailed)
+        }
+    }
+    
+    func sessionWasInterrupted(_ session: ARSession) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已中斷")
+        }
+    }
+    
+    func sessionInterruptionEnded(_ session: ARSession) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已恢復")
+            self?.startARSession()
+        }
+    }
+}
+
+// MARK: - ARManagerDelegate
+
+extension ViewController: ARManagerDelegate {
+    
+    func arManagerDidStartSession(_ manager: ARManager) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已啟動")
+            self?.showGuidance("移動裝置以偵測平面")
+        }
+    }
+    
+    func arManagerDidStopSession(_ manager: ARManager) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已停止")
+        }
+    }
+    
+    func arManager(_ manager: ARManager, didDetectPlane plane: ARPlaneAnchor) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("已偵測到平面")
+            
+            // Update guidance after first plane detection
+            if self?.settingsManager.shouldShowGuidance == true {
+                self?.updateGuidance("將相機對準物體，確保物體完整顯示在畫面中")
+            }
+        }
+    }
+    
+    func arManager(_ manager: ARManager, didUpdatePlane plane: ARPlaneAnchor) {
+        // Plane updated - no UI update needed
+    }
+    
+    func arManager(_ manager: ARManager, didRemovePlane plane: ARPlaneAnchor) {
+        // Plane removed - no UI update needed
+    }
+    
+    func arManager(_ manager: ARManager, didPlaceVirtualObject object: VirtualObject, at position: SCNVector3) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("已放置虛擬物件")
+        }
+    }
+    
+    func arManager(_ manager: ARManager, didFailWithError error: MeasurementError) {
+        DispatchQueue.main.async { [weak self] in
+            self?.handleError(error)
+        }
+    }
+    
+    func arManager(_ manager: ARManager, didChangeTrackingState state: ARTrackingState) {
+        DispatchQueue.main.async { [weak self] in
+            switch state {
+            case .normal:
+                self?.updateStatusLabel("追蹤正常")
+                if self?.settingsManager.shouldShowGuidance == true {
+                    self?.showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
+                }
+                
+            case .notAvailable:
+                self?.updateStatusLabel("追蹤不可用")
+                self?.showGuidance("AR 追蹤暫時不可用")
+                
+            case .limited(let reason):
+                switch reason {
+                case .initializing:
+                    self?.updateStatusLabel("正在初始化...")
+                    self?.showGuidance("移動裝置以初始化 AR")
+                    
+                case .excessiveMotion:
+                    self?.updateStatusLabel("移動過快")
+                    self?.showGuidance("請放慢移動速度")
+                    
+                case .insufficientFeatures:
+                    self?.updateStatusLabel("特徵點不足")
+                    self?.showGuidance("請對準有更多細節的區域")
+                    
+                case .relocalizing:
+                    self?.updateStatusLabel("正在重新定位...")
+                    self?.showGuidance("移動裝置以重新定位")
+                }
+            }
+        }
+    }
+    
+    func arManagerSessionWasInterrupted(_ manager: ARManager) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已中斷")
+            self?.showGuidance("AR 會話已中斷，請稍候")
+        }
+    }
+    
+    func arManagerSessionInterruptionEnded(_ manager: ARManager) {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateStatusLabel("AR 會話已恢復")
+            self?.hideGuidance()
+        }
+    }
+}
