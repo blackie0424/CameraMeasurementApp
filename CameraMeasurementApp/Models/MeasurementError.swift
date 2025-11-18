@@ -19,6 +19,9 @@ enum MeasurementError: Error {
     case modelLoadingFailed
     case invalidImageData
     case networkError
+    case detectionFailed
+    case measurementFailed
+    case unknown
     
     var localizedDescription: String {
         switch self {
@@ -44,6 +47,12 @@ enum MeasurementError: Error {
             return "無效的影像資料"
         case .networkError:
             return "網路連接錯誤"
+        case .detectionFailed:
+            return "物體檢測失敗，請確保物體清晰可見"
+        case .measurementFailed:
+            return "測量計算失敗，請重新拍攝"
+        case .unknown:
+            return "發生未知錯誤"
         }
     }
     
@@ -71,6 +80,12 @@ enum MeasurementError: Error {
             return "重新拍攝"
         case .networkError:
             return "檢查網路"
+        case .detectionFailed:
+            return "重新拍攝"
+        case .measurementFailed:
+            return "重新測量"
+        case .unknown:
+            return "重試"
         }
     }
 }
