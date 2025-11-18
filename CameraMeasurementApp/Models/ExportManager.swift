@@ -499,7 +499,7 @@ class ExportManager {
         return formatter.string(from: date)
     }
     
-    private func formatDateForFilename(_ date: Date) -> String {
+    func formatDateForFilename(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         return formatter.string(from: date)
