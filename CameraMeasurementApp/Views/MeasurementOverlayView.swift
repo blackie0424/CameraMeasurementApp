@@ -56,6 +56,72 @@ class MeasurementOverlayView: UIView {
     var dimensionLineColor: UIColor = .systemYellow
     var dimensionLineWidth: CGFloat = 1.5
     
+    // MARK: - Real-time Measurement Properties
+    private var realtimeDimensions: ObjectDimensions?
+    private var realtimeIndicatorPosition: CGPoint?
+    private var isRealtimeMeasurementActive: Bool = false
+    private var measurementFailureState: Bool = false
+    
+    // Real-time dimension labels
+    private let lengthLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.85)
+        label.textAlignment = .center
+        label.layer.cornerRadius = 6
+        label.layer.masksToBounds = true
+        label.alpha = 0
+        return label
+    }()
+    
+    private let widthLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.85)
+        label.textAlignment = .center
+        label.layer.cornerRadius = 6
+        label.layer.masksToBounds = true
+        label.alpha = 0
+        return label
+    }()
+    
+    private let heightLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.85)
+        label.textAlignment = .center
+        label.layer.cornerRadius = 6
+        label.layer.masksToBounds = true
+        label.alpha = 0
+        return label
+    }()
+    
+    // Measurement indicator view
+    private let measurementIndicator: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.alpha = 0
+        return view
+    }()
+    
+    // Failure state label
+    private let failureLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 14, weight: .semibold)
+        label.textColor = .white
+        label.backgroundColor = UIColor.systemRed.withAlphaComponent(0.85)
+        label.textAlignment = .center
+        label.text = "測量失敗 - 請調整角度或距離"
+        label.layer.cornerRadius = 8
+        label.layer.masksToBounds = true
+        label.numberOfLines = 0
+        label.alpha = 0
+        return label
+    }()
+    
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -70,6 +136,53 @@ class MeasurementOverlayView: UIView {
     private func setupView() {
         backgroundColor = .clear
         isOpaque = false
+        
+        // Add real-time measurement labels
+        addSubview(lengthLabel)
+        addSubview(widthLabel)
+        addSubview(heightLabel)
+        addSubview(measurementIndicator)
+        addSubview(failureLabel)
+        
+        // Setup measurement indicator
+        setupMeasurementIndicator()
+    }
+    
+    private func setupMeasurementIndicator() {
+        // Create crosshair indicator
+        let crosshairSize: CGFloat = 40
+        let lineWidth: CGFloat = 2
+        
+        let horizontalLine = UIView()
+        horizontalLine.backgroundColor = .systemYellow
+        horizontalLine.translatesAutoresizingMaskIntoConstraints = false
+        measurementIndicator.addSubview(horizontalLine)
+        
+        let verticalLine = UIView()
+        verticalLine.backgroundColor = .systemYellow
+        verticalLine.translatesAutoresizingMaskIntoConstraints = false
+        measurementIndicator.addSubview(verticalLine)
+        
+        NSLayoutConstraint.activate([
+            horizontalLine.centerXAnchor.constraint(equalTo: measurementIndicator.centerXAnchor),
+            horizontalLine.centerYAnchor.constraint(equalTo: measurementIndicator.centerYAnchor),
+            horizontalLine.widthAnchor.constraint(equalToConstant: crosshairSize),
+            horizontalLine.heightAnchor.constraint(equalToConstant: lineWidth),
+            
+            verticalLine.centerXAnchor.constraint(equalTo: measurementIndicator.centerXAnchor),
+            verticalLine.centerYAnchor.constraint(equalTo: measurementIndicator.centerYAnchor),
+            verticalLine.widthAnchor.constraint(equalToConstant: lineWidth),
+            verticalLine.heightAnchor.constraint(equalToConstant: crosshairSize)
+        ])
+        
+        // Add pulsing animation
+        let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+        pulseAnimation.duration = 1.0
+        pulseAnimation.fromValue = 0.8
+        pulseAnimation.toValue = 1.2
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+        measurementIndicator.layer.add(pulseAnimation, forKey: "pulse")
     }
     
     // MARK: - Drawing
@@ -433,6 +546,203 @@ class MeasurementOverlayView: UIView {
             self.dimensionLineColor = lineColor
         }
         setNeedsDisplay()
+    }
+    
+    // MARK: - Real-time Measurement Methods
+    
+    /// Update real-time measurement display with smooth animation
+    func updateRealtimeMeasurement(_ dimensions: ObjectDimensions) {
+        print("📐 MeasurementOverlayView.updateRealtimeMeasurement called")
+        print("   Dimensions: L=\(dimensions.length), W=\(dimensions.width), H=\(dimensions.height)")
+        print("   Labels alpha: length=\(lengthLabel.alpha), width=\(widthLabel.alpha), height=\(heightLabel.alpha)")
+        print("   View bounds: \(bounds)")
+        
+        realtimeDimensions = dimensions
+        isRealtimeMeasurementActive = true
+        measurementFailureState = false
+        
+        // Get preferred unit
+        let unit = UserDefaults.standard.string(forKey: "preferredUnit") ?? "cm"
+        let measurementUnit = MeasurementUnit(rawValue: unit) ?? .centimeters
+        let factor = measurementUnit.conversionFactor
+        let unitSymbol = measurementUnit.symbol
+        
+        // Update label texts
+        let lengthText = String(format: "長: %.1f%@", dimensions.length * factor, unitSymbol)
+        let widthText = String(format: "寬: %.1f%@", dimensions.width * factor, unitSymbol)
+        let heightText = String(format: "高: %.1f%@", dimensions.height * factor, unitSymbol)
+        
+        print("   Label texts: \(lengthText), \(widthText), \(heightText)")
+        
+        // Animate label updates with smooth transition
+        UIView.transition(with: lengthLabel, duration: 0.3, options: .transitionCrossDissolve) {
+            self.lengthLabel.text = lengthText
+        }
+        
+        UIView.transition(with: widthLabel, duration: 0.3, options: .transitionCrossDissolve) {
+            self.widthLabel.text = widthText
+        }
+        
+        UIView.transition(with: heightLabel, duration: 0.3, options: .transitionCrossDissolve) {
+            self.heightLabel.text = heightText
+        }
+        
+        // Show labels with animation if not already visible
+        if lengthLabel.alpha == 0 {
+            print("   Showing labels (alpha was 0)")
+            showRealtimeLabels()
+        } else {
+            print("   Labels already visible (alpha=\(lengthLabel.alpha))")
+        }
+        
+        // Hide failure label if visible
+        if failureLabel.alpha > 0 {
+            hideFailureLabel()
+        }
+        
+        // Update label positions
+        updateLabelPositions()
+        
+        print("   ✅ updateRealtimeMeasurement completed")
+    }
+    
+    /// Show measurement indicator at specific position
+    func showMeasurementIndicator(at position: CGPoint) {
+        realtimeIndicatorPosition = position
+        measurementIndicator.center = position
+        
+        UIView.animate(withDuration: 0.2) {
+            self.measurementIndicator.alpha = 1.0
+        }
+    }
+    
+    /// Clear real-time measurement display
+    func clearRealtimeMeasurement() {
+        realtimeDimensions = nil
+        isRealtimeMeasurementActive = false
+        measurementFailureState = false
+        
+        hideRealtimeLabels()
+        hideMeasurementIndicator()
+        hideFailureLabel()
+    }
+    
+    /// Show measurement failure state
+    func showMeasurementFailure() {
+        measurementFailureState = true
+        isRealtimeMeasurementActive = false
+        
+        // Hide measurement labels
+        hideRealtimeLabels()
+        
+        // Show failure label
+        showFailureLabel()
+    }
+    
+    // MARK: - Private Real-time Methods
+    
+    private func showRealtimeLabels() {
+        print("   🎨 showRealtimeLabels called")
+        print("      Label frames before: length=\(lengthLabel.frame), width=\(widthLabel.frame), height=\(heightLabel.frame)")
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            self.lengthLabel.alpha = 1.0
+            self.widthLabel.alpha = 1.0
+            self.heightLabel.alpha = 1.0
+            print("      Setting alpha to 1.0")
+        } completion: { _ in
+            print("      Animation completed, alpha: \(self.lengthLabel.alpha)")
+        }
+    }
+    
+    private func hideRealtimeLabels() {
+        UIView.animate(withDuration: 0.2) {
+            self.lengthLabel.alpha = 0
+            self.widthLabel.alpha = 0
+            self.heightLabel.alpha = 0
+        }
+    }
+    
+    private func hideMeasurementIndicator() {
+        UIView.animate(withDuration: 0.2) {
+            self.measurementIndicator.alpha = 0
+        }
+    }
+    
+    private func showFailureLabel() {
+        // Position failure label at center
+        failureLabel.frame = CGRect(
+            x: bounds.midX - 150,
+            y: bounds.midY - 30,
+            width: 300,
+            height: 60
+        )
+        
+        UIView.animate(withDuration: 0.3) {
+            self.failureLabel.alpha = 1.0
+        }
+    }
+    
+    private func hideFailureLabel() {
+        UIView.animate(withDuration: 0.2) {
+            self.failureLabel.alpha = 0
+        }
+    }
+    
+    private func updateLabelPositions() {
+        let padding: CGFloat = 20
+        let labelHeight: CGFloat = 36
+        let labelWidth: CGFloat = 120
+        
+        // Position labels vertically on the left side
+        let startY = bounds.midY - (labelHeight * 1.5 + padding)
+        
+        print("   📍 updateLabelPositions called")
+        print("      Bounds: \(bounds)")
+        print("      StartY: \(startY)")
+        
+        lengthLabel.frame = CGRect(
+            x: padding,
+            y: startY,
+            width: labelWidth,
+            height: labelHeight
+        )
+        
+        widthLabel.frame = CGRect(
+            x: padding,
+            y: startY + labelHeight + 10,
+            width: labelWidth,
+            height: labelHeight
+        )
+        
+        heightLabel.frame = CGRect(
+            x: padding,
+            y: startY + (labelHeight + 10) * 2,
+            width: labelWidth,
+            height: labelHeight
+        )
+        
+        print("      Label frames set: length=\(lengthLabel.frame), width=\(widthLabel.frame), height=\(heightLabel.frame)")
+        print("      Label superview: \(lengthLabel.superview != nil ? "exists" : "nil")")
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        // Update label positions when view bounds change
+        if isRealtimeMeasurementActive {
+            updateLabelPositions()
+        }
+        
+        // Update failure label position
+        if measurementFailureState {
+            failureLabel.frame = CGRect(
+                x: bounds.midX - 150,
+                y: bounds.midY - 30,
+                width: 300,
+                height: 60
+            )
+        }
     }
     
     // MARK: - Helper Types
