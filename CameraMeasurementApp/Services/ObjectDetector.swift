@@ -19,6 +19,7 @@ class ObjectDetector: ObjectDetectorProtocol {
     private var visionModel: VNCoreMLModel?
     private let confidenceThreshold: Float = 0.25
     private var detectionCache: [String: [DetectedObject]] = [:]
+    private let cacheQueue = DispatchQueue(label: "com.camerameasurement.detectionCache", attributes: .concurrent)
     private let classifier = ObjectClassifier()
     private let boundingBoxTransformer = BoundingBoxTransformer.self
     private let confidenceEvaluator = ConfidenceEvaluator()
@@ -53,26 +54,59 @@ class ObjectDetector: ObjectDetectorProtocol {
     
     // MARK: - ObjectDetectorProtocol Implementation
     
+    // Detection counter for logging
+    private var detectionCounter = 0
+    
     func detectObjects(in image: UIImage) -> [DetectedObject] {
+        // Log occasionally
+        detectionCounter += 1
+        let shouldLog = detectionCounter <= 3 || detectionCounter % 20 == 0
+        
+        if shouldLog {
+            print("🔍 ObjectDetector.detectObjects called (count: \(detectionCounter))")
+        }
+        
         guard let cgImage = image.cgImage else {
             print("❌ Failed to convert UIImage to CGImage")
             return []
         }
         
-        // Check cache first
+        if shouldLog {
+            print("   Image size: \(cgImage.width)x\(cgImage.height)")
+        }
+        
+        // Check cache first (thread-safe read)
         let cacheKey = generateCacheKey(for: image)
-        if let cachedResults = detectionCache[cacheKey] {
-            return cachedResults
+        var cachedResults: [DetectedObject]?
+        cacheQueue.sync {
+            cachedResults = detectionCache[cacheKey]
+        }
+        
+        if let cached = cachedResults {
+            if shouldLog {
+                print("   Using cached results: \(cached.count) objects")
+            }
+            return cached
         }
         
         var detectedObjects: [DetectedObject] = []
         
         if let model = visionModel {
             // Use Core ML model for detection
+            if shouldLog {
+                print("   Using Core ML model for detection")
+            }
             detectedObjects = performMLDetection(on: cgImage)
         } else {
             // Fallback: Use Vision's built-in object detection
+            if shouldLog {
+                print("   Using Vision fallback detection")
+            }
             detectedObjects = performVisionDetection(on: cgImage)
+        }
+        
+        if shouldLog {
+            print("   Initial detection: \(detectedObjects.count) objects")
         }
         
         // Filter objects based on confidence evaluation
@@ -82,12 +116,15 @@ class ObjectDetector: ObjectDetectorProtocol {
         // Update detection history for temporal consistency
         confidenceEvaluator.updateHistory(with: detectedObjects)
         
-        // Cache results
-        detectionCache[cacheKey] = detectedObjects
-        
-        // Limit cache size
-        if detectionCache.count > 10 {
-            detectionCache.removeAll()
+        // Cache results (thread-safe write)
+        cacheQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            self.detectionCache[cacheKey] = detectedObjects
+            
+            // Limit cache size
+            if self.detectionCache.count > 10 {
+                self.detectionCache.removeAll()
+            }
         }
         
         return detectedObjects
