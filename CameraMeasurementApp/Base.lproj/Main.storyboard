@@ -23,12 +23,7 @@
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             
-                            <!-- Measurement Overlay View -->
-                            <view contentMode="scaleToFill" userInteractionEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="measurementOverlay">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            </view>
-                            
+
                             <!-- Status Label -->
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="正在初始化相機..." textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="statusLabel">
                                 <rect key="frame" x="20" y="79" width="313" height="30"/>
@@ -96,12 +91,7 @@
                             <constraint firstItem="arSceneContainer" firstAttribute="trailing" secondItem="8bC-Xf-vdC" secondAttribute="trailing" id="arSceneTrailing"/>
                             <constraint firstItem="arSceneContainer" firstAttribute="bottom" secondItem="8bC-Xf-vdC" secondAttribute="bottom" id="arSceneBottom"/>
                             
-                            <!-- Measurement Overlay Constraints -->
-                            <constraint firstItem="measurementOverlay" firstAttribute="top" secondItem="arSceneContainer" secondAttribute="top" id="overlayTop"/>
-                            <constraint firstItem="measurementOverlay" firstAttribute="leading" secondItem="arSceneContainer" secondAttribute="leading" id="overlayLeading"/>
-                            <constraint firstItem="measurementOverlay" firstAttribute="trailing" secondItem="arSceneContainer" secondAttribute="trailing" id="overlayTrailing"/>
-                            <constraint firstItem="measurementOverlay" firstAttribute="bottom" secondItem="arSceneContainer" secondAttribute="bottom" id="overlayBottom"/>
-                            
+
                             <!-- Status Label Constraints -->
                             <constraint firstItem="statusLabel" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="statusLabelTop"/>
                             <constraint firstItem="statusLabel" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="statusLabelLeading"/>
@@ -122,7 +112,6 @@
                     <connections>
                         <outlet property="arSceneView" destination="arSceneContainer" id="arSceneViewOutlet"/>
                         <outlet property="guidanceLabel" destination="guidanceLabel" id="guidanceLabelOutlet"/>
-                        <outlet property="measurementOverlayView" destination="measurementOverlay" id="measurementOverlayOutlet"/>
                         <outlet property="settingsButton" destination="settingsButton" id="settingsButtonOutlet"/>
                         <outlet property="statusLabel" destination="statusLabel" id="statusLabelOutlet"/>
                         <segue destination="results-vc" kind="presentation" identifier="showResults" modalPresentationStyle="fullScreen" id="showResultsSegue"/>

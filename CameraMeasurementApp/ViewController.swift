@@ -17,7 +17,6 @@ class ViewController: UIViewController, ARSessionDelegate {
     @IBOutlet weak var captureButton: UIButton!
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var statusLabel: UILabel!
-    @IBOutlet weak var measurementOverlayView: UIView!
     @IBOutlet weak var guidanceLabel: UILabel!
     
     // MARK: - Properties
@@ -56,7 +55,6 @@ class ViewController: UIViewController, ARSessionDelegate {
         // UI elements are now connected via IBOutlets from storyboard
         // Additional configuration if needed
         arSceneView.backgroundColor = .darkGray
-        measurementOverlayView.isUserInteractionEnabled = false
         
         // Configure guidance label padding
         guidanceLabel.layer.masksToBounds = true
