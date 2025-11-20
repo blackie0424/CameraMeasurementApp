@@ -23,23 +23,8 @@ class ViewController: UIViewController, ARSessionDelegate {
     // MARK: - Properties
     private var sceneView: ARSCNView!
     private var arManager: ARManager?
-    private var objectDetector: ObjectDetectorProtocol?
-    private var measurementCalculator: MeasurementCalculatorProtocol?
-    private var referenceObjectManager: ReferenceObjectManager?
-    private var realtimeMeasurementManager: RealtimeMeasurementManager?
-    
-    private var currentMeasurementRecord: MeasurementRecord?
-    private var isCapturing = false
-    private var capturedImage: UIImage?
-    private var isRealtimeMeasurementActive = false
     
     private let settingsManager = SettingsManager.shared
-    private var overlayView: MeasurementOverlayView?
-    
-    // Counters for logging
-    private var frameProcessingLogCounter = 0
-    private var frameProcessingCounter = 0
-    private var rendererCallCount = 0
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
