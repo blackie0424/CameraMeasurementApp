@@ -87,30 +87,6 @@
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
                                 </userDefinedRuntimeAttributes>
                             </label>
-                            
-                            <!-- Capture Button -->
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="captureButton">
-                                <rect key="frame" x="136.66666666666666" y="718" width="120" height="70"/>
-                                <color key="backgroundColor" systemColor="systemBlueColor"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="120" id="captureButtonWidth"/>
-                                    <constraint firstAttribute="height" constant="70" id="captureButtonHeight"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
-                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                <state key="normal" title="拍照測量">
-                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                </state>
-                                <userDefinedRuntimeAttributes>
-                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
-                                        <integer key="value" value="35"/>
-                                    </userDefinedRuntimeAttribute>
-                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
-                                </userDefinedRuntimeAttributes>
-                                <connections>
-                                    <action selector="captureButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="captureAction"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
@@ -140,16 +116,11 @@
                             <constraint firstItem="guidanceLabel" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="guidanceLabelCenterY"/>
                             <constraint firstItem="guidanceLabel" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="40" id="guidanceLabelLeading"/>
                             <constraint firstItem="guidanceLabel" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" constant="-40" id="guidanceLabelTrailing"/>
-                            
-                            <!-- Capture Button Constraints -->
-                            <constraint firstItem="captureButton" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="captureButtonCenterX"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="captureButton" secondAttribute="bottom" constant="30" id="captureButtonBottom"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <connections>
                         <outlet property="arSceneView" destination="arSceneContainer" id="arSceneViewOutlet"/>
-                        <outlet property="captureButton" destination="captureButton" id="captureButtonOutlet"/>
                         <outlet property="guidanceLabel" destination="guidanceLabel" id="guidanceLabelOutlet"/>
                         <outlet property="measurementOverlayView" destination="measurementOverlay" id="measurementOverlayOutlet"/>
                         <outlet property="settingsButton" destination="settingsButton" id="settingsButtonOutlet"/>
