@@ -34,7 +34,6 @@ extension ViewController {
     /// 驗證所有 IBOutlet 是否正確連接
     func validateOutlets() -> Bool {
         return arSceneView != nil &&
-               captureButton != nil &&
                settingsButton != nil &&
                statusLabel != nil &&
                guidanceLabel != nil

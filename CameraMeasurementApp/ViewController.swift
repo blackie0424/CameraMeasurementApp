@@ -14,7 +14,6 @@ class ViewController: UIViewController, ARSessionDelegate {
     
     // MARK: - IBOutlets
     @IBOutlet weak var arSceneView: UIView!
-    @IBOutlet weak var captureButton: UIButton!
     @IBOutlet weak var settingsButton: UIButton!
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var guidanceLabel: UILabel!
@@ -80,7 +79,7 @@ class ViewController: UIViewController, ARSessionDelegate {
         view.addSubview(manualMeasureButton)
         
         NSLayoutConstraint.activate([
-            manualMeasureButton.bottomAnchor.constraint(equalTo: captureButton.topAnchor, constant: -20),
+            manualMeasureButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
             manualMeasureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             manualMeasureButton.widthAnchor.constraint(equalToConstant: 120),
             manualMeasureButton.heightAnchor.constraint(equalToConstant: 44)
