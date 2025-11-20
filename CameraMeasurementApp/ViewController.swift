@@ -79,6 +79,29 @@ class ViewController: UIViewController, ARSessionDelegate {
         
         // Setup ARSCNView
         setupARSCNView()
+        
+        // Add Manual Measurement button
+        setupManualMeasurementButton()
+    }
+    
+    private func setupManualMeasurementButton() {
+        let manualMeasureButton = UIButton(type: .system)
+        manualMeasureButton.translatesAutoresizingMaskIntoConstraints = false
+        manualMeasureButton.setTitle("手動測量", for: .normal)
+        manualMeasureButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        manualMeasureButton.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.9)
+        manualMeasureButton.setTitleColor(.white, for: .normal)
+        manualMeasureButton.layer.cornerRadius = 8
+        manualMeasureButton.addTarget(self, action: #selector(showManualMeasurement), for: .touchUpInside)
+        
+        view.addSubview(manualMeasureButton)
+        
+        NSLayoutConstraint.activate([
+            manualMeasureButton.bottomAnchor.constraint(equalTo: captureButton.topAnchor, constant: -20),
+            manualMeasureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            manualMeasureButton.widthAnchor.constraint(equalToConstant: 120),
+            manualMeasureButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
     }
     
     private func setupARSCNView() {
@@ -378,6 +401,13 @@ class ViewController: UIViewController, ARSessionDelegate {
     @IBAction func settingsButtonTapped(_ sender: UIButton) {
         // Navigate to settings page
         performSegue(withIdentifier: "showSettings", sender: nil)
+    }
+    
+    /// Navigate to Manual Measurement feature
+    @objc private func showManualMeasurement() {
+        let manualMeasurementVC = ManualMeasurementViewController()
+        manualMeasurementVC.modalPresentationStyle = .fullScreen
+        present(manualMeasurementVC, animated: true, completion: nil)
     }
     
     // MARK: - Measurement Methods
