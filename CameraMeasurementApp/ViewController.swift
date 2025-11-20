@@ -175,21 +175,10 @@ class ViewController: UIViewController, ARSessionDelegate {
             configuration: realtimeConfig
         )
         
-        // Setup overlay view for real-time measurement display
-        setupOverlayView()
-        
         updateStatusLabel("相機測量系統已準備就緒")
     }
     
-    private func setupOverlayView() {
-        // Create overlay view if it doesn't exist
-        if overlayView == nil {
-            overlayView = MeasurementOverlayView(frame: measurementOverlayView.bounds)
-            overlayView?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            overlayView?.backgroundColor = .clear
-            measurementOverlayView.addSubview(overlayView!)
-        }
-    }
+
     
     private func checkPermissions() {
         // Check camera permission
@@ -228,134 +217,11 @@ class ViewController: UIViewController, ARSessionDelegate {
     }
     
     private func stopARSession() {
-        // Stop real-time measurement first
-        stopRealtimeMeasurement()
-        
         arManager?.stopARSession()
         updateStatusLabel("相機測量系統已停止")
     }
     
-    // MARK: - Real-time Measurement Control
-    
-    /// Start real-time measurement when AR session is ready
-    private func startRealtimeMeasurement() {
-        guard !isRealtimeMeasurementActive else {
-            print("⚠️ Real-time measurement already active")
-            return
-        }
-        
-        guard let manager = realtimeMeasurementManager else {
-            print("❌ Real-time measurement manager not initialized")
-            return
-        }
-        
-        print("🚀 Starting real-time measurement...")
-        print("   Overlay view exists: \(overlayView != nil)")
-        print("   Overlay view frame: \(overlayView?.frame ?? .zero)")
-        
-        // Start real-time measurement with update handler
-        manager.startRealtimeMeasurement(
-            updateHandler: { [weak self] result in
-                print("📊 Received measurement update:")
-                print("   Dimensions: \(result.dimensions.formattedDimensions())")
-                print("   Confidence: \(result.object.confidence)")
-                self?.handleRealtimeMeasurementUpdate(result)
-            },
-            errorHandler: { [weak self] error in
-                print("❌ Measurement error: \(error.localizedDescription)")
-                self?.handleRealtimeMeasurementError(error)
-            }
-        )
-        
-        isRealtimeMeasurementActive = true
-        print("✅ Real-time measurement started")
-        
-        // Update UI to show real-time mode
-        DispatchQueue.main.async { [weak self] in
-            self?.updateStatusLabel("即時測量已啟動")
-        }
-    }
-    
-    /// Stop real-time measurement
-    private func stopRealtimeMeasurement() {
-        guard isRealtimeMeasurementActive else {
-            return
-        }
-        
-        realtimeMeasurementManager?.stopRealtimeMeasurement()
-        isRealtimeMeasurementActive = false
-        
-        // Clear overlay
-        overlayView?.clearRealtimeMeasurement()
-        
-        print("✅ Real-time measurement stopped")
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.updateStatusLabel("即時測量已停止")
-        }
-    }
-    
-    /// Handle real-time measurement updates
-    private func handleRealtimeMeasurementUpdate(_ result: RealtimeMeasurementResult) {
-        print("🔄 Handling measurement update on thread: \(Thread.current)")
-        print("   Overlay view: \(overlayView != nil ? "exists" : "nil")")
-        
-        // Ensure UI updates happen on main thread
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            print("   Updating overlay view with dimensions: \(result.dimensions.formattedDimensions())")
-            
-            // Update overlay view with new measurements
-            self.overlayView?.updateRealtimeMeasurement(result.dimensions)
-            
-            // Show measurement indicator at screen center
-            let screenCenter = CGPoint(
-                x: self.measurementOverlayView.bounds.midX,
-                y: self.measurementOverlayView.bounds.midY
-            )
-            self.overlayView?.showMeasurementIndicator(at: screenCenter)
-            
-            // Update status with confidence
-            let confidence = result.object.confidence
-            let confidencePercent = Int(confidence * 100)
-            self.updateStatusLabel("即時測量中 - 信心度: \(confidencePercent)%")
-            
-            print("   ✅ Overlay updated")
-        }
-    }
-    
-    /// Handle real-time measurement errors
-    private func handleRealtimeMeasurementError(_ error: MeasurementError) {
-        // Show failure state in overlay
-        overlayView?.showMeasurementFailure()
-        
-        // Update status
-        DispatchQueue.main.async { [weak self] in
-            self?.updateStatusLabel("測量失敗 - \(error.localizedDescription)")
-        }
-    }
-    
-    /// Process AR frames for real-time measurement
-    private func processARFrameForRealtimeMeasurement(_ frame: ARFrame) {
-        guard isRealtimeMeasurementActive else {
-            // Only log occasionally
-            frameProcessingLogCounter += 1
-            if frameProcessingLogCounter % 100 == 0 {
-                print("⚠️ Real-time measurement not active, skipping frame processing")
-            }
-            return
-        }
-        
-        // Log occasionally to confirm frames are being processed
-        frameProcessingCounter += 1
-        if frameProcessingCounter % 50 == 0 {
-            print("🎬 Processing frame \(frameProcessingCounter) for real-time measurement")
-        }
-        
-        // Pass frame to real-time measurement manager
-        realtimeMeasurementManager?.processFrame(frame)
-    }
+
     
     // MARK: - Actions
     @IBAction func captureButtonTapped(_ sender: UIButton) {
@@ -705,37 +571,15 @@ class ViewController: UIViewController, ARSessionDelegate {
 extension ViewController: ARSCNViewDelegate {
     
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
-        rendererCallCount += 1
-        
-        // Log first few calls and then occasionally
-        if rendererCallCount <= 3 || rendererCallCount % 100 == 0 {
-            print("🎥 renderer called (count: \(rendererCallCount))")
-        }
-        
-        // Process current frame for real-time measurement
-        if let frame = arManager?.getCurrentFrame() {
-            if rendererCallCount <= 3 {
-                print("   ✅ AR frame available")
-            }
-            processARFrameForRealtimeMeasurement(frame)
-        } else {
-            // Only log occasionally to avoid spam
-            if rendererCallCount <= 3 || Int(time) % 5 == 0 {
-                print("⚠️ No AR frame available at time \(time)")
-            }
-        }
+        // Frame processing removed - no automatic detection
     }
     
     // ARSessionDelegate method - alternative to renderer
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        // Process frame for real-time measurement
-        processARFrameForRealtimeMeasurement(frame)
+        // Frame processing removed - no automatic detection
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
-        // Stop real-time measurement on session failure
-        stopRealtimeMeasurement()
-        
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("AR 會話錯誤")
             self?.handleError(.arSessionFailed)
@@ -743,9 +587,6 @@ extension ViewController: ARSCNViewDelegate {
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
-        // Pause real-time measurement during interruption
-        stopRealtimeMeasurement()
-        
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("AR 會話已中斷")
         }
@@ -771,9 +612,6 @@ extension ViewController: ARManagerDelegate {
     }
     
     func arManagerDidStopSession(_ manager: ARManager) {
-        // Stop real-time measurement when AR session stops
-        stopRealtimeMeasurement()
-        
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("AR 會話已停止")
         }
@@ -782,11 +620,6 @@ extension ViewController: ARManagerDelegate {
     func arManager(_ manager: ARManager, didDetectPlane plane: ARPlaneAnchor) {
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("已偵測到平面")
-            
-            // Start real-time measurement after first plane detection
-            if !(self?.isRealtimeMeasurementActive ?? false) {
-                self?.startRealtimeMeasurement()
-            }
             
             // Update guidance after first plane detection
             if self?.settingsManager.shouldShowGuidance == true {
@@ -824,61 +657,31 @@ extension ViewController: ARManagerDelegate {
                 print("   ✅ Tracking normal")
                 self?.updateStatusLabel("追蹤正常")
                 
-                // Resume real-time measurement if not active
-                if !(self?.isRealtimeMeasurementActive ?? false) {
-                    // Check if we have detected planes first
-                    if let planes = self?.arManager?.detectPlanes(), !planes.isEmpty {
-                        print("   🔄 Resuming real-time measurement (planes detected)")
-                        self?.startRealtimeMeasurement()
-                    } else {
-                        print("   ⏳ Waiting for plane detection before starting measurement")
-                    }
-                }
-                
                 if self?.settingsManager.shouldShowGuidance == true {
                     self?.showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
                 }
                 
             case .notAvailable:
-                print("   ❌ Tracking not available (stopping measurement)")
-                // Stop real-time measurement when tracking is not available
-                self?.stopRealtimeMeasurement()
-                
+                print("   ❌ Tracking not available")
                 self?.updateStatusLabel("追蹤不可用")
                 self?.showGuidance("AR 追蹤暫時不可用")
                 
             case .limited(let reason):
                 switch reason {
                 case .initializing:
-                    // Don't stop measurement during initialization
                     self?.updateStatusLabel("正在初始化...")
                     self?.showGuidance("移動裝置以初始化 AR")
-                    print("⚠️ Tracking limited: initializing (keeping measurement active)")
+                    print("⚠️ Tracking limited: initializing")
                     
                 case .excessiveMotion:
-                    // Pause measurement during excessive motion
-                    if self?.isRealtimeMeasurementActive == true {
-                        print("⚠️ Tracking limited: excessive motion (pausing measurement)")
-                        self?.stopRealtimeMeasurement()
-                    }
                     self?.updateStatusLabel("移動過快")
                     self?.showGuidance("請放慢移動速度")
                     
                 case .insufficientFeatures:
-                    // Pause measurement when features are insufficient
-                    if self?.isRealtimeMeasurementActive == true {
-                        print("⚠️ Tracking limited: insufficient features (pausing measurement)")
-                        self?.stopRealtimeMeasurement()
-                    }
                     self?.updateStatusLabel("特徵點不足")
                     self?.showGuidance("請對準有更多細節的區域")
                     
                 case .relocalizing:
-                    // Pause measurement during relocalization
-                    if self?.isRealtimeMeasurementActive == true {
-                        print("⚠️ Tracking limited: relocalizing (pausing measurement)")
-                        self?.stopRealtimeMeasurement()
-                    }
                     self?.updateStatusLabel("正在重新定位...")
                     self?.showGuidance("移動裝置以重新定位")
                 }
@@ -887,9 +690,6 @@ extension ViewController: ARManagerDelegate {
     }
     
     func arManagerSessionWasInterrupted(_ manager: ARManager) {
-        // Stop real-time measurement during interruption
-        stopRealtimeMeasurement()
-        
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("AR 會話已中斷")
             self?.showGuidance("AR 會話已中斷，請稍候")
@@ -900,14 +700,6 @@ extension ViewController: ARManagerDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.updateStatusLabel("AR 會話已恢復")
             self?.hideGuidance()
-            
-            // Restart real-time measurement after interruption ends
-            // Wait a bit for AR session to stabilize
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                if let planes = self?.arManager?.detectPlanes(), !planes.isEmpty {
-                    self?.startRealtimeMeasurement()
-                }
-            }
         }
     }
 }
