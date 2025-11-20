@@ -155,26 +155,6 @@ class ViewController: UIViewController, ARSessionDelegate {
         arManager = ARManager(arView: sceneView)
         arManager?.delegate = self
         
-        // Initialize core components
-        objectDetector = ObjectDetector()
-        measurementCalculator = MeasurementCalculator()
-        referenceObjectManager = ReferenceObjectManager.shared
-        
-        // Initialize real-time measurement manager
-        var realtimeConfig = RealtimeMeasurementConfiguration()
-        realtimeConfig.useCachedResults = true
-        realtimeConfig.enableSmoothing = true
-        realtimeConfig.smoothingWindowSize = 5
-        realtimeConfig.filterType = .movingAverage
-        realtimeConfig.enableOutlierDetection = true
-        
-        realtimeMeasurementManager = RealtimeMeasurementManager(
-            targetFPS: 8.0,
-            objectDetector: objectDetector,
-            measurementCalculator: measurementCalculator,
-            configuration: realtimeConfig
-        )
-        
         updateStatusLabel("相機測量系統已準備就緒")
     }
     

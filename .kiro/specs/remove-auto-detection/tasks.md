@@ -46,7 +46,7 @@
   - Keep basic AR status updates and guidance messages
   - _Requirements: 3.1, 5.5_
 
-- [ ] 7. Simplify setupCameraMeasurement method
+- [x] 7. Simplify setupCameraMeasurement method
 
   - Remove initialization of `objectDetector`, `measurementCalculator`, `referenceObjectManager`
   - Remove initialization of `realtimeMeasurementManager` and its configuration
