@@ -37,7 +37,6 @@ extension ViewController {
                captureButton != nil &&
                settingsButton != nil &&
                statusLabel != nil &&
-               measurementOverlayView != nil &&
                guidanceLabel != nil
     }
 }
