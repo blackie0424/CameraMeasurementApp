@@ -114,7 +114,6 @@
                         <outlet property="guidanceLabel" destination="guidanceLabel" id="guidanceLabelOutlet"/>
                         <outlet property="settingsButton" destination="settingsButton" id="settingsButtonOutlet"/>
                         <outlet property="statusLabel" destination="statusLabel" id="statusLabelOutlet"/>
-                        <segue destination="results-vc" kind="presentation" identifier="showResults" modalPresentationStyle="fullScreen" id="showResultsSegue"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

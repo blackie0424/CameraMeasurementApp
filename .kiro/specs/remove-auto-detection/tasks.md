@@ -54,13 +54,13 @@
   - Keep ARManager initialization
   - _Requirements: 3.2, 5.6_
 
-- [ ] 8. Simplify viewWillDisappear method
+- [x] 8. Simplify viewWillDisappear method
 
   - Remove call to `stopRealtimeMeasurement()`
   - Keep call to `stopARSession()`
   - _Requirements: 3.1_
 
-- [ ] 9. Remove capture button from Main.storyboard
+- [x] 9. Remove capture button from Main.storyboard
 
   - Remove `captureButton` UI element
   - Remove `captureButtonOutlet` connection
@@ -68,14 +68,14 @@
   - Remove all constraints related to capture button
   - _Requirements: 1.2, 3.3_
 
-- [ ] 10. Remove measurement overlay from Main.storyboard
+- [x] 10. Remove measurement overlay from Main.storyboard
 
   - Remove `measurementOverlay` view element
   - Remove `measurementOverlayOutlet` connection
   - Remove all constraints related to measurement overlay
   - _Requirements: 1.3, 3.3_
 
-- [ ] 11. Remove results segue from Main.storyboard
+- [x] 11. Remove results segue from Main.storyboard
 
   - Remove `showResults` segue (identifier: "showResults")
   - Remove `showResultsSegue` connection

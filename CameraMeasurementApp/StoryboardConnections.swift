@@ -9,9 +9,6 @@ import Foundation
 
 /// Storyboard Segue 識別碼
 enum SegueIdentifier {
-    /// 從主畫面到測量結果頁面
-    static let showResults = "showResults"
-    
     /// 從主畫面到設定頁面
     static let showSettings = "showSettings"
 }
