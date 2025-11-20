@@ -341,7 +341,7 @@ struct IntegrationTests {
         print("\n🧪 Testing ExportManager and DataManager integration...")
         
         let dataManager = DataManager.shared
-        let exportManager = ExportManager()
+        let exportManager = ExportManager.shared
         let testImage = createTestImage()
         
         // Create test record
@@ -375,22 +375,19 @@ struct IntegrationTests {
         // Test CSV export
         print("📋 Testing CSV export")
         let records = try dataManager.fetchAllRecords()
-        let csvData = try exportManager.exportToCSV(records: records)
+        let csvString = try exportManager.exportToCSV(records: records)
         
-        #expect(csvData.count > 0)
-        print("✓ Exported \(csvData.count) bytes of CSV data")
+        #expect(csvString.count > 0)
+        print("✓ Exported \(csvString.count) characters of CSV data")
         
         // Verify CSV content
-        if let csvString = String(data: csvData, encoding: .utf8) {
-            #expect(csvString.contains("Timestamp"))
-            #expect(csvString.contains("Object Type"))
-            print("✓ CSV contains expected headers")
-        }
+        #expect(csvString.contains("Timestamp"))
+        #expect(csvString.contains("Object Type"))
+        print("✓ CSV contains expected headers")
         
         // Test annotated image export
         print("📋 Testing annotated image export")
-        let annotatedImage = exportManager.createAnnotatedImage(for: record)
-        #expect(annotatedImage != nil)
+        let annotatedImage = try exportManager.createAnnotatedImage(from: record)
         print("✓ Created annotated image")
         
         // Cleanup
@@ -486,9 +483,9 @@ struct IntegrationTests {
         
         // Simulate user exporting data
         print("📋 Step 8: User exports data")
-        let exportManager = ExportManager()
-        let csvData = try exportManager.exportToCSV(records: [record])
-        print("✓ Exported data (\(csvData.count) bytes)")
+        let exportManager = ExportManager.shared
+        let csvString = try exportManager.exportToCSV(records: [record])
+        print("✓ Exported data (\(csvString.count) characters)")
         
         // Cleanup
         try dataManager.deleteRecord(byId: savedId)
