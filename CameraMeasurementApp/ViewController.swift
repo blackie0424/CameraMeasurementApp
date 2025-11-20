@@ -446,7 +446,7 @@ extension ViewController: ARManagerDelegate {
             
             // Update guidance after first plane detection
             if self?.settingsManager.shouldShowGuidance == true {
-                self?.updateGuidance("將相機對準物體，確保物體完整顯示在畫面中")
+                self?.updateGuidance("平面已偵測，可以開始手動測量")
             }
         }
     }
@@ -481,7 +481,7 @@ extension ViewController: ARManagerDelegate {
                 self?.updateStatusLabel("追蹤正常")
                 
                 if self?.settingsManager.shouldShowGuidance == true {
-                    self?.showGuidance("將相機對準物體，確保物體完整顯示在畫面中")
+                    self?.showGuidance("追蹤正常，可以開始手動測量")
                 }
                 
             case .notAvailable:
