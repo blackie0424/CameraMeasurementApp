@@ -236,19 +236,9 @@ class ViewController: UIViewController, ARSessionDelegate {
         present(manualMeasurementVC, animated: true, completion: nil)
     }
     
-    // MARK: - Measurement Methods
-    
-    private func showResults(with record: MeasurementRecord) {
-        performSegue(withIdentifier: "showResults", sender: record)
-    }
-    
     // MARK: - Navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "showResults",
-           let resultsVC = segue.destination as? ResultsViewController,
-           let record = sender as? MeasurementRecord {
-            resultsVC.measurementRecord = record
-        }
+        // Navigation logic for other segues if needed
     }
     
     // MARK: - UI Helper Methods
