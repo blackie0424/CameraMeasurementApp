@@ -24,6 +24,12 @@ class ManualMeasurementViewController: UIViewController {
     /// 狀態標籤
     private var statusLabel: UILabel!
     
+    /// 偵測進度標籤
+    private var detectionProgressLabel: UILabel!
+    
+    /// 重新偵測平面按鈕
+    private var redetectButton: UIButton!
+    
     /// 關閉按鈕
     private var closeButton: UIButton!
     
@@ -37,6 +43,12 @@ class ManualMeasurementViewController: UIViewController {
     
     /// 渲染器
     private var renderer: MeasurementRenderer!
+    
+    /// 平面偵測管理器
+    private var planeDetectionManager: PlaneDetectionManager!
+    
+    /// 追蹤品質監控器
+    private var trackingQualityMonitor: TrackingQualityMonitor!
     
     /// 效能監控器
     private let performanceMonitor = PerformanceMonitor.shared
@@ -119,7 +131,7 @@ class ManualMeasurementViewController: UIViewController {
         // 狀態標籤
         statusLabel = UILabel()
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
-        statusLabel.text = "移動裝置以偵測表面"
+        statusLabel.text = "正在偵測平面，請緩慢移動裝置"
         statusLabel.textAlignment = .center
         statusLabel.textColor = .white
         statusLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
@@ -128,6 +140,30 @@ class ManualMeasurementViewController: UIViewController {
         statusLabel.clipsToBounds = true
         statusLabel.numberOfLines = 0
         view.addSubview(statusLabel)
+        
+        // 偵測進度標籤
+        detectionProgressLabel = UILabel()
+        detectionProgressLabel.translatesAutoresizingMaskIntoConstraints = false
+        detectionProgressLabel.text = "已偵測 0 個平面"
+        detectionProgressLabel.textAlignment = .center
+        detectionProgressLabel.textColor = .white
+        detectionProgressLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        detectionProgressLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        detectionProgressLabel.layer.cornerRadius = 6
+        detectionProgressLabel.clipsToBounds = true
+        view.addSubview(detectionProgressLabel)
+        
+        // 重新偵測平面按鈕
+        redetectButton = UIButton(type: .system)
+        redetectButton.translatesAutoresizingMaskIntoConstraints = false
+        redetectButton.setTitle("重新偵測平面", for: .normal)
+        redetectButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        redetectButton.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.8)
+        redetectButton.setTitleColor(.white, for: .normal)
+        redetectButton.layer.cornerRadius = 6
+        redetectButton.addTarget(self, action: #selector(redetectPlanes), for: .touchUpInside)
+        redetectButton.isHidden = true  // 初始隱藏
+        view.addSubview(redetectButton)
         
         // 關閉按鈕
         closeButton = UIButton(type: .system)
@@ -154,6 +190,18 @@ class ManualMeasurementViewController: UIViewController {
             statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             statusLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
             
+            // 偵測進度標籤
+            detectionProgressLabel.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 8),
+            detectionProgressLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            detectionProgressLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 150),
+            detectionProgressLabel.heightAnchor.constraint(equalToConstant: 32),
+            
+            // 重新偵測平面按鈕
+            redetectButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 8),
+            redetectButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            redetectButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 150),
+            redetectButton.heightAnchor.constraint(equalToConstant: 32),
+            
             // 關閉按鈕
             closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -175,7 +223,120 @@ class ManualMeasurementViewController: UIViewController {
         // 初始化渲染器
         renderer = MeasurementRenderer(sceneView: arView)
         
+        // 初始化平面偵測管理器
+        planeDetectionManager = PlaneDetectionManager()
+        setupPlaneDetectionCallbacks()
+        
+        // 初始化追蹤品質監控器
+        trackingQualityMonitor = TrackingQualityMonitor()
+        setupTrackingQualityCallbacks()
+        
+        // 初始化 UI 狀態（偵測階段）
+        updateUIForDetectionState(.detecting)
+        
         print("✅ ViewController: Components initialized")
+    }
+    
+    /// 設置平面偵測回調
+    private func setupPlaneDetectionCallbacks() {
+        // 狀態變更回調
+        planeDetectionManager.onStateChanged = { [weak self] newState in
+            DispatchQueue.main.async {
+                self?.updateUIForDetectionState(newState)
+            }
+        }
+        
+        // 平面新增回調
+        planeDetectionManager.onPlaneAdded = { [weak self] planeInfo in
+            DispatchQueue.main.async {
+                self?.updateDetectionProgress()
+            }
+        }
+        
+        // 平面更新回調
+        planeDetectionManager.onPlaneUpdated = { [weak self] planeInfo in
+            DispatchQueue.main.async {
+                self?.updateDetectionProgress()
+            }
+        }
+        
+        // 平面移除回調
+        planeDetectionManager.onPlaneRemoved = { [weak self] identifier in
+            DispatchQueue.main.async {
+                self?.updateDetectionProgress()
+            }
+        }
+    }
+    
+    /// 設置追蹤品質回調
+    private func setupTrackingQualityCallbacks() {
+        trackingQualityMonitor.onQualityChanged = { [weak self] quality in
+            DispatchQueue.main.async {
+                self?.handleTrackingQualityChange(quality)
+            }
+        }
+    }
+    
+    /// 更新 UI 以反映平面偵測狀態
+    /// 需求: 1.1, 1.2, 7.1, 7.3, 7.4, 7.5
+    private func updateUIForDetectionState(_ state: PlaneDetectionState) {
+        switch state {
+        case .detecting:
+            // 偵測階段：禁用測量按鈕，顯示「偵測中...」
+            measureButton.isEnabled = false
+            measureButton.setTitle("偵測中...", for: .normal)
+            measureButton.backgroundColor = UIColor.systemGray
+            statusLabel.text = "正在偵測平面，請緩慢移動裝置"
+            detectionProgressLabel.isHidden = false
+            redetectButton.isHidden = true
+            
+        case .ready:
+            // 準備測量：啟用測量按鈕
+            measureButton.isEnabled = true
+            measureButton.setTitle("開始測量", for: .normal)
+            measureButton.backgroundColor = UIColor.systemBlue
+            
+            let planeCount = planeDetectionManager.getPlaneCount()
+            if planeCount == 1 {
+                statusLabel.text = "已偵測到平面，繼續移動以改善準確度"
+            } else {
+                statusLabel.text = "已偵測到足夠平面，可以開始測量"
+            }
+            detectionProgressLabel.isHidden = false
+            redetectButton.isHidden = true
+            
+        case .measurementMode:
+            // 測量模式：保持按鈕啟用，更新文字，顯示重新偵測按鈕
+            // 需求: 7.4 - 固定當前平面，停止新平面視覺化
+            measureButton.isEnabled = true
+            measureButton.setTitle("開始測量", for: .normal)
+            measureButton.backgroundColor = UIColor.systemBlue
+            statusLabel.text = "移動裝置以選擇測量點"
+            detectionProgressLabel.isHidden = true
+            redetectButton.isHidden = false  // 需求: 7.5 - 顯示重新偵測選項
+        }
+    }
+    
+    /// 更新偵測進度顯示
+    /// 需求: 7.3
+    private func updateDetectionProgress() {
+        let planeCount = planeDetectionManager.getPlaneCount()
+        detectionProgressLabel.text = "已偵測 \(planeCount) 個平面"
+        
+        // 如果偵測到第一個平面，更新狀態訊息
+        if planeCount == 1 && planeDetectionManager.state == .detecting {
+            statusLabel.text = "已偵測到平面，繼續移動以改善準確度"
+        }
+    }
+    
+    /// 處理追蹤品質變更
+    /// 需求: 5.2
+    private func handleTrackingQualityChange(_ quality: TrackingQuality) {
+        if let warningMessage = trackingQualityMonitor.getWarningMessage() {
+            showTrackingWarning(warningMessage)
+        } else {
+            hideTrackingWarning()
+        }
     }
     
     // MARK: - Button Actions
@@ -184,13 +345,39 @@ class ManualMeasurementViewController: UIViewController {
         dismiss(animated: true, completion: nil)
     }
     
+    /// 重新偵測平面
+    /// 需求: 7.5
+    @objc private func redetectPlanes() {
+        // 清除當前測量
+        renderer.clearAllVisuals()
+        stateManager.reset()
+        
+        // 重置平面偵測
+        planeDetectionManager.resetDetection()
+        
+        // 重新顯示中心游標
+        renderer.showCenterReticle(on: view)
+        
+        // 觸覺回饋
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+    }
+    
     /// 處理測量按鈕點擊
-    /// 需求: 2.1, 2.4, 4.1, 5.2
+    /// 需求: 2.1, 2.4, 4.1, 5.2, 7.4
     @objc private func onMeasureButtonTapped() {
+        // 檢查平面偵測狀態
+        if planeDetectionManager.state == .ready {
+            // 從 ready 狀態進入測量模式
+            // 需求: 7.4 - 固定當前平面，停止新平面視覺化
+            planeDetectionManager.enterMeasurementMode()
+            return
+        }
+        
         // 取得螢幕中心點
         let screenCenter = CGPoint(x: arView.bounds.midX, y: arView.bounds.midY)
         
-        // 根據當前狀態執行不同邏輯
+        // 根據當前測量狀態執行不同邏輯
         switch stateManager.currentState {
         case .initial:
             // Initial 狀態：執行 hit test 並記錄起點
@@ -714,9 +901,8 @@ class ManualMeasurementViewController: UIViewController {
                 // 顯示中心游標
                 self.renderer.showCenterReticle(on: self.view)
                 
-                // 更新狀態
-                self.updateStatusLabel("移動裝置以偵測表面")
-                self.updateMeasureButton(title: "開始測量")
+                // 更新狀態（初始為偵測階段）
+                self.updateUIForDetectionState(.detecting)
                 
                 // 開始定期檢查
                 self.startTrackingStateMonitoring()
@@ -1010,6 +1196,9 @@ extension ManualMeasurementViewController: ARSessionDelegate {
         let stateDescription = arManager.getTrackingStateDescription()
         print("📍 Tracking state changed: \(stateDescription)")
         
+        // 更新追蹤品質監控器
+        trackingQualityMonitor.updateTrackingState(camera)
+        
         switch camera.trackingState {
         case .normal:
             print("   ✅ Tracking is working normally")
@@ -1025,16 +1214,31 @@ extension ManualMeasurementViewController: ARSessionDelegate {
         for anchor in anchors {
             if let planeAnchor = anchor as? ARPlaneAnchor {
                 print("   - Plane anchor: \(planeAnchor.alignment)")
+                // 只在非測量模式下接受新平面
+                // 需求: 7.4 - 測量模式下停止新平面視覺化
+                if planeDetectionManager.state != .measurementMode {
+                    planeDetectionManager.addPlane(planeAnchor)
+                }
             }
         }
     }
     
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
-        // Silently update anchors (too verbose for logging)
+        // 更新平面錨點（即使在測量模式下也允許更新現有平面）
+        for anchor in anchors {
+            if let planeAnchor = anchor as? ARPlaneAnchor {
+                planeDetectionManager.updatePlane(planeAnchor)
+            }
+        }
     }
     
     func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
         print("➖ Removed \(anchors.count) anchor(s)")
+        for anchor in anchors {
+            if let planeAnchor = anchor as? ARPlaneAnchor {
+                planeDetectionManager.removePlane(planeAnchor)
+            }
+        }
     }
     
     /// 監控追蹤品質並顯示警告
