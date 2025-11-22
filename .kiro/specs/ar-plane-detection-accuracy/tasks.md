@@ -145,32 +145,32 @@
 
 - [ ] 8. 實作距離計算改進
 
-  - [ ] 8.1 更新距離計算使用錨定測量點
+  - [x] 8.1 更新距離計算使用錨定測量點
 
     - 修改 `calculateDistance(from:to:)` 接受 AnchoredMeasurementPoint
     - 使用 `worldPosition()` 動態獲取當前世界座標
     - 使用歐幾里得距離公式：sqrt((x2-x1)² + (y2-y1)² + (z2-z1)²)
     - _需求：6.1, 6.2, 6.3_
 
-  - [ ] 8.2 實作距離格式化
+  - [x] 8.2 實作距離格式化
 
     - 轉換為公分單位（\* 100）
     - 格式化為一位小數（例如 "45.3 cm"）
     - _需求：6.5_
 
-  - [ ] 8.3 撰寫 property test 驗證 3D 距離計算
+  - [x] 8.3 撰寫 property test 驗證 3D 距離計算
 
     - **Property 16: 3D 距離計算**
     - **Validates: Requirements 6.1, 6.2, 6.3**
     - 生成隨機測量點，驗證距離計算公式正確性（誤差 < 0.1mm）
 
-  - [ ] 8.4 撰寫 property test 驗證跨平面距離計算
+  - [x] 8.4 撰寫 property test 驗證跨平面距離計算
 
     - **Property 17: 跨平面距離計算**
     - **Validates: Requirements 6.4**
     - 生成位於不同平面的測量點，驗證距離計算
 
-  - [ ] 8.5 撰寫 property test 驗證距離格式化
+  - [x] 8.5 撰寫 property test 驗證距離格式化
     - **Property 18: 距離格式化**
     - **Validates: Requirements 6.5**
     - 生成隨機距離值，驗證格式化輸出
