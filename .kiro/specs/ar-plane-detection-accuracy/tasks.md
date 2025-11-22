@@ -143,7 +143,7 @@
     - **Property 7: 平面未命中時拒絕測量點**
     - **Validates: Requirements 3.3**
 
-- [ ] 8. 實作距離計算改進
+- [x] 8. 實作距離計算改進
 
   - [x] 8.1 更新距離計算使用錨定測量點
 
@@ -175,16 +175,16 @@
     - **Validates: Requirements 6.5**
     - 生成隨機距離值，驗證格式化輸出
 
-- [ ] 9. 實作測量線渲染改進
+- [x] 9. 實作測量線渲染改進
 
-  - [ ] 9.1 更新測量線渲染使用錨定測量點
+  - [x] 9.1 更新測量線渲染使用錨定測量點
 
     - 修改 `drawLine(from:to:)` 接受 AnchoredMeasurementPoint
     - 使用 `worldPosition()` 獲取端點座標
     - 確保兩個端點都有有效的平面錨點
     - _需求：4.5_
 
-  - [ ] 9.2 撰寫 property test 驗證測量線錨定
+  - [x] 9.2 撰寫 property test 驗證測量線錨定
     - **Property 13: 測量線兩端都錨定**
     - **Validates: Requirements 4.5**
 

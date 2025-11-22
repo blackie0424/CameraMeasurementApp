@@ -173,11 +173,36 @@ extension MeasurementRenderer {
 // MARK: - Measurement Line
 
 extension MeasurementRenderer {
-    /// 繪製連接兩點的測量線
+    /// 繪製連接兩點的測量線（使用錨定測量點）
+    /// - Parameters:
+    ///   - startPoint: 起點錨定測量點
+    ///   - endPoint: 終點錨定測量點
+    ///   - color: 線條顏色
+    /// 需求: 4.5 - 確保測量線的兩個端點都錨定在穩定的平面上
+    func drawLine(from startPoint: AnchoredMeasurementPoint, to endPoint: AnchoredMeasurementPoint, color: UIColor) {
+        // 使用 worldPosition() 獲取端點座標
+        // 這確保了即使平面更新，測量線也會保持在正確的位置
+        let start = startPoint.worldPosition()
+        let end = endPoint.worldPosition()
+        
+        // 移除舊的線條
+        lineNode?.removeFromParentNode()
+        
+        // 建立新的線條節點
+        lineNode = createLineNode(from: start, to: end, color: color)
+        
+        // 添加到場景
+        if let lineNode = lineNode {
+            sceneView?.scene.rootNode.addChildNode(lineNode)
+        }
+    }
+    
+    /// 繪製連接兩點的測量線（使用 SCNVector3）
     /// - Parameters:
     ///   - start: 起點位置
     ///   - end: 終點位置
     ///   - color: 線條顏色
+    /// 注意：此方法保留用於向後相容，建議使用接受 AnchoredMeasurementPoint 的版本
     func drawLine(from start: SCNVector3, to end: SCNVector3, color: UIColor) {
         // 移除舊的線條
         lineNode?.removeFromParentNode()
