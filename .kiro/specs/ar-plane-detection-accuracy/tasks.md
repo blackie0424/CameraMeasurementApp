@@ -70,9 +70,9 @@
     - **Validates: Requirements 5.2, 5.3**
     - 生成隨機追蹤狀態，驗證警告和功能禁用邏輯
 
-- [ ] 5. 實作平面視覺化渲染
+- [x] 5. 實作平面視覺化渲染
 
-  - [ ] 5.1 擴展 MeasurementRenderer 支援平面視覺化
+  - [x] 5.1 擴展 MeasurementRenderer 支援平面視覺化
 
     - 實作 `visualizePlane(_:)` 方法創建平面視覺化節點
     - 使用 SCNPlane 幾何體，大小匹配 anchor.extent
@@ -80,26 +80,26 @@
     - 設定透明度為 0.3
     - _需求：2.1, 2.2, 2.3_
 
-  - [ ] 5.2 實作平面視覺化更新
+  - [x] 5.2 實作平面視覺化更新
 
     - 實作 `updatePlaneVisualization(_:)` 方法
     - 根據 anchor.extent 更新節點大小和位置
     - 實作 `removePlaneVisualization(_:)` 方法，包含 2 秒淡出動畫
     - _需求：2.4, 2.5_
 
-  - [ ] 5.3 實作追蹤品質視覺回饋
+  - [x] 5.3 實作追蹤品質視覺回饋
 
     - 實作 `setPlaneColor(_:for:)` 方法
     - 追蹤品質不佳時將所有平面變為黃色
     - _需求：5.5_
 
-  - [ ] 5.4 撰寫 property test 驗證平面顏色映射
+  - [x] 5.4 撰寫 property test 驗證平面顏色映射
 
     - **Property 3: 平面類型到顏色映射**
     - **Validates: Requirements 2.2, 2.3**
     - 生成隨機平面類型，驗證顏色正確性
 
-  - [ ] 5.5 撰寫 property test 驗證追蹤品質視覺回饋
+  - [x] 5.5 撰寫 property test 驗證追蹤品質視覺回饋
     - **Property 15: 追蹤品質不佳時平面變黃色**
     - **Validates: Requirements 5.5**
 
@@ -113,7 +113,7 @@
     - 對準平面時顯示綠色，未對準時顯示紅色
     - _需求：3.4, 3.5_
 
-  - [ ]\* 6.2 撰寫 property test 驗證游標顏色回饋
+  - [ ] 6.2 撰寫 property test 驗證游標顏色回饋
     - **Property 8: 游標顏色回饋**
     - **Validates: Requirements 3.4, 3.5**
     - 生成隨機游標狀態，驗證顏色映射
@@ -134,12 +134,12 @@
     - 根據是否命中平面更新游標顏色
     - _需求：3.4, 3.5_
 
-  - [ ]\* 7.3 撰寫 property test 驗證測量點放置邏輯
+  - [ ] 7.3 撰寫 property test 驗證測量點放置邏輯
 
     - **Property 6: 平面命中時放置測量點**
     - **Validates: Requirements 3.2**
 
-  - [ ]\* 7.4 撰寫 property test 驗證測量點拒絕邏輯
+  - [ ] 7.4 撰寫 property test 驗證測量點拒絕邏輯
     - **Property 7: 平面未命中時拒絕測量點**
     - **Validates: Requirements 3.3**
 
@@ -184,7 +184,7 @@
     - 確保兩個端點都有有效的平面錨點
     - _需求：4.5_
 
-  - [ ]\* 9.2 撰寫 property test 驗證測量線錨定
+  - [ ] 9.2 撰寫 property test 驗證測量線錨定
     - **Property 13: 測量線兩端都錨定**
     - **Validates: Requirements 4.5**
 
@@ -211,7 +211,7 @@
     - 實作「重新偵測平面」選項
     - _需求：7.4, 7.5_
 
-  - [ ]\* 10.4 撰寫 property test 驗證偵測進度顯示
+  - [ ] 10.4 撰寫 property test 驗證偵測進度顯示
     - **Property 19: 偵測進度顯示**
     - **Validates: Requirements 7.3**
     - 生成隨機平面數量，驗證顯示文字正確
@@ -232,7 +232,7 @@
     - 根據追蹤品質更新 UI 和平面顏色
     - _需求：5.1, 5.2, 5.5_
 
-  - [ ]\* 11.3 撰寫 property test 驗證平面更新時測量點跟隨
+  - [ ] 11.3 撰寫 property test 驗證平面更新時測量點跟隨
     - **Property 12: 平面更新時測量點跟隨**
     - **Validates: Requirements 4.4**
     - 模擬平面更新，驗證測量點座標相應調整

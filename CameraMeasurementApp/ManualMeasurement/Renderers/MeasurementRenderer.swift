@@ -33,6 +33,9 @@ class MeasurementRenderer {
     /// 儲存起點位置（用於更新線條）
     private var startPosition: SCNVector3?
     
+    /// 平面視覺化節點字典（key: plane anchor UUID）
+    private var planeNodes: [UUID: SCNNode] = [:]
+    
     // MARK: - Initialization
     
     init(sceneView: ARSCNView) {
@@ -384,5 +387,144 @@ extension MeasurementRenderer {
         endMarkerNode = nil
         
         startPosition = nil
+    }
+}
+
+// MARK: - Plane Visualization
+
+extension MeasurementRenderer {
+    /// 視覺化平面
+    /// 創建半透明網格節點並添加到場景中
+    /// - Parameter anchor: 要視覺化的 ARPlaneAnchor
+    /// 需求: 2.1, 2.2, 2.3
+    func visualizePlane(_ anchor: ARPlaneAnchor) {
+        guard let sceneView = sceneView else { return }
+        
+        // 如果已存在該平面的視覺化，先移除
+        if let existingNode = planeNodes[anchor.identifier] {
+            existingNode.removeFromParentNode()
+        }
+        
+        // 創建平面幾何體，大小匹配 anchor.extent
+        let width = CGFloat(anchor.extent.x)
+        let height = CGFloat(anchor.extent.z)
+        let plane = SCNPlane(width: width, height: height)
+        
+        // 根據平面類型設定顏色
+        let color = colorForPlane(anchor)
+        plane.firstMaterial?.diffuse.contents = color
+        plane.firstMaterial?.lightingModel = .constant
+        plane.firstMaterial?.isDoubleSided = true
+        
+        // 創建平面節點
+        let planeNode = SCNNode(geometry: plane)
+        
+        // 設定平面位置和旋轉
+        // ARPlaneAnchor 的 transform 已包含位置和旋轉信息
+        planeNode.simdTransform = anchor.transform
+        
+        // 水平平面需要旋轉 90 度，因為 SCNPlane 默認是垂直的
+        if anchor.alignment == .horizontal {
+            planeNode.eulerAngles.x = -.pi / 2
+        }
+        
+        // 添加到場景
+        sceneView.scene.rootNode.addChildNode(planeNode)
+        
+        // 儲存節點引用
+        planeNodes[anchor.identifier] = planeNode
+    }
+    
+    /// 更新平面視覺化
+    /// 根據 anchor.extent 更新節點大小和位置
+    /// - Parameter anchor: 更新的 ARPlaneAnchor
+    /// 需求: 2.4
+    func updatePlaneVisualization(_ anchor: ARPlaneAnchor) {
+        guard let planeNode = planeNodes[anchor.identifier],
+              let planeGeometry = planeNode.geometry as? SCNPlane else {
+            // 如果節點不存在，創建新的視覺化
+            visualizePlane(anchor)
+            return
+        }
+        
+        // 更新平面幾何體大小
+        let width = CGFloat(anchor.extent.x)
+        let height = CGFloat(anchor.extent.z)
+        planeGeometry.width = width
+        planeGeometry.height = height
+        
+        // 更新平面位置和旋轉
+        planeNode.simdTransform = anchor.transform
+        
+        // 水平平面需要旋轉 90 度
+        if anchor.alignment == .horizontal {
+            planeNode.eulerAngles.x = -.pi / 2
+        }
+    }
+    
+    /// 移除平面視覺化
+    /// 包含 2 秒淡出動畫
+    /// - Parameter anchor: 要移除的 ARPlaneAnchor
+    /// 需求: 2.5
+    func removePlaneVisualization(_ anchor: ARPlaneAnchor) {
+        guard let planeNode = planeNodes[anchor.identifier] else {
+            return
+        }
+        
+        // 創建淡出動畫（2 秒）
+        let fadeOut = SCNAction.fadeOut(duration: 2.0)
+        let remove = SCNAction.removeFromParentNode()
+        let sequence = SCNAction.sequence([fadeOut, remove])
+        
+        // 執行動畫
+        planeNode.runAction(sequence)
+        
+        // 從字典中移除引用
+        planeNodes.removeValue(forKey: anchor.identifier)
+    }
+    
+    /// 設定特定平面的顏色
+    /// 用於追蹤品質視覺回饋
+    /// - Parameters:
+    ///   - color: 要設定的顏色
+    ///   - anchor: 目標 ARPlaneAnchor
+    /// 需求: 5.5
+    func setPlaneColor(_ color: UIColor, for anchor: ARPlaneAnchor) {
+        guard let planeNode = planeNodes[anchor.identifier],
+              let material = planeNode.geometry?.firstMaterial else {
+            return
+        }
+        
+        material.diffuse.contents = color
+    }
+    
+    /// 設定所有平面的顏色
+    /// 用於追蹤品質不佳時將所有平面變為黃色
+    /// - Parameter color: 要設定的顏色
+    /// 需求: 5.5
+    func setAllPlanesColor(_ color: UIColor) {
+        for (_, planeNode) in planeNodes {
+            if let material = planeNode.geometry?.firstMaterial {
+                material.diffuse.contents = color
+            }
+        }
+    }
+    
+    /// 根據平面類型返回對應的顏色
+    /// - Parameter anchor: ARPlaneAnchor
+    /// - Returns: 水平平面返回藍色，垂直平面返回綠色，透明度 0.3
+    /// 需求: 2.2, 2.3
+    private func colorForPlane(_ anchor: ARPlaneAnchor) -> UIColor {
+        switch anchor.alignment {
+        case .horizontal:
+            // 藍色 (RGB: 0.2, 0.5, 1.0)，透明度 0.3
+            return UIColor(red: 0.2, green: 0.5, blue: 1.0, alpha: 0.3)
+        case .vertical:
+            // 綠色 (RGB: 0.2, 1.0, 0.5)，透明度 0.3
+            return UIColor(red: 0.2, green: 1.0, blue: 0.5, alpha: 0.3)
+        @unknown default:
+            // 預設使用藍色
+            return UIColor(red: 0.2, green: 0.5, blue: 1.0, alpha: 0.3)
+        }
     }
 }
