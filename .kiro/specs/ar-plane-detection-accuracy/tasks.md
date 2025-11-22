@@ -118,9 +118,9 @@
     - **Validates: Requirements 3.4, 3.5**
     - 生成隨機游標狀態，驗證顏色映射
 
-- [ ] 7. 實作測量點放置邏輯
+- [x] 7. 實作測量點放置邏輯
 
-  - [ ] 7.1 更新測量點放置流程
+  - [x] 7.1 更新測量點放置流程
 
     - 修改 `onMeasureButtonTapped()` 使用 `performHitTestOnPlanes(at:)`
     - 只在命中平面時放置測量點
@@ -128,18 +128,18 @@
     - 使用 `createAnchoredPoint(on:at:)` 創建錨定測量點
     - _需求：3.2, 3.3, 4.1_
 
-  - [ ] 7.2 實作即時游標狀態更新
+  - [x] 7.2 實作即時游標狀態更新
 
     - 在 `updateRealtimePreview()` 中執行 hit test
     - 根據是否命中平面更新游標顏色
     - _需求：3.4, 3.5_
 
-  - [ ] 7.3 撰寫 property test 驗證測量點放置邏輯
+  - [x] 7.3 撰寫 property test 驗證測量點放置邏輯
 
     - **Property 6: 平面命中時放置測量點**
     - **Validates: Requirements 3.2**
 
-  - [ ] 7.4 撰寫 property test 驗證測量點拒絕邏輯
+  - [x] 7.4 撰寫 property test 驗證測量點拒絕邏輯
     - **Property 7: 平面未命中時拒絕測量點**
     - **Validates: Requirements 3.3**
 

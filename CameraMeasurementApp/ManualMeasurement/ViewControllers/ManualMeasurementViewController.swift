@@ -211,6 +211,7 @@ class ManualMeasurementViewController: UIViewController {
     }
     
     /// 處理 Initial 狀態的按鈕點擊
+    /// 需求: 3.2, 3.3, 4.1
     private func handleInitialState(screenCenter: CGPoint) {
         // 檢查追蹤品質
         if !isTrackingQualitySufficient() {
@@ -218,15 +219,22 @@ class ManualMeasurementViewController: UIViewController {
             return
         }
         
-        // 執行 hit test
-        guard let hitResult = arManager.performHitTest(at: screenCenter) else {
-            // Hit test 失敗
-            handleError(.hitTestFailed)
+        // 執行平面優先的 hit test
+        // 需求: 3.1 - 優先檢測已偵測的平面
+        guard let (hitResult, planeAnchor) = arManager.performHitTestOnPlanes(at: screenCenter) else {
+            // 未命中平面，顯示提示訊息
+            // 需求: 3.3 - 未命中平面時拒絕放置測量點
+            updateStatusLabel("請將游標對準已偵測的平面")
+            showHitTestFailureAnimation()
             return
         }
         
-        // 取得 3D 世界座標
-        let position = arManager.worldPosition(from: hitResult)
+        // 創建錨定測量點
+        // 需求: 4.1 - 將測量點錨定到 Plane Anchor
+        let anchoredPoint = arManager.createAnchoredPoint(on: planeAnchor, at: hitResult)
+        
+        // 取得世界座標用於顯示標記
+        let position = anchoredPoint.worldPosition()
         
         // 驗證測量點有效性
         do {
@@ -236,7 +244,7 @@ class ManualMeasurementViewController: UIViewController {
             return
         }
         
-        // 記錄起點
+        // 記錄起點（儲存錨定測量點）
         stateManager.recordStartPoint(position)
         
         // 顯示起點標記
@@ -248,6 +256,7 @@ class ManualMeasurementViewController: UIViewController {
     }
     
     /// 處理 StartPointRecorded 狀態的按鈕點擊
+    /// 需求: 3.2, 3.3, 4.1
     private func handleStartPointRecordedState(screenCenter: CGPoint) {
         // 檢查追蹤品質
         if !isTrackingQualitySufficient() {
@@ -255,15 +264,22 @@ class ManualMeasurementViewController: UIViewController {
             return
         }
         
-        // 執行 hit test
-        guard let hitResult = arManager.performHitTest(at: screenCenter) else {
-            // Hit test 失敗
-            handleError(.hitTestFailed)
+        // 執行平面優先的 hit test
+        // 需求: 3.1 - 優先檢測已偵測的平面
+        guard let (hitResult, planeAnchor) = arManager.performHitTestOnPlanes(at: screenCenter) else {
+            // 未命中平面，顯示提示訊息
+            // 需求: 3.3 - 未命中平面時拒絕放置測量點
+            updateStatusLabel("請將游標對準已偵測的平面")
+            showHitTestFailureAnimation()
             return
         }
         
-        // 取得 3D 世界座標
-        let position = arManager.worldPosition(from: hitResult)
+        // 創建錨定測量點
+        // 需求: 4.1 - 將測量點錨定到 Plane Anchor
+        let anchoredPoint = arManager.createAnchoredPoint(on: planeAnchor, at: hitResult)
+        
+        // 取得世界座標用於顯示標記
+        let position = anchoredPoint.worldPosition()
         
         // 驗證測量點有效性
         do {
@@ -854,37 +870,40 @@ class ManualMeasurementViewController: UIViewController {
     /// 更新即時預覽
     /// 需求: 3.1, 3.2, 3.4, 3.5
     private func updateRealtimePreview() {
-        // 只在 StartPointRecorded 狀態時更新
-        guard case .startPointRecorded(let startPosition) = stateManager.currentState else {
-            return
-        }
-        
         // 取得螢幕中心點
         let screenCenter = CGPoint(x: arView.bounds.midX, y: arView.bounds.midY)
         
-        // 執行 hit test
-        guard let hitResult = arManager.performHitTest(at: screenCenter) else {
-            return
+        // 執行平面優先的 hit test 來更新游標狀態
+        // 需求: 3.4, 3.5 - 根據是否命中平面更新游標顏色
+        if let (hitResult, _) = arManager.performHitTestOnPlanes(at: screenCenter) {
+            // 命中平面，游標顯示綠色
+            renderer.setReticleState(.onPlane)
+            
+            // 只在 StartPointRecorded 狀態時更新測量線預覽
+            if case .startPointRecorded(let startPosition) = stateManager.currentState {
+                // 取得當前位置
+                let currentPosition = arManager.worldPosition(from: hitResult)
+                
+                // 更新測量線
+                renderer.updateLine(to: currentPosition)
+                
+                // 計算當前距離
+                let distance = stateManager.calculateDistance(from: startPosition, to: currentPosition)
+                
+                // 計算中點位置
+                let midpoint = SCNVector3(
+                    (startPosition.x + currentPosition.x) / 2,
+                    (startPosition.y + currentPosition.y) / 2,
+                    (startPosition.z + currentPosition.z) / 2
+                )
+                
+                // 更新距離顯示
+                renderer.showDistance(distance, at: midpoint)
+            }
+        } else {
+            // 未命中平面，游標顯示紅色
+            renderer.setReticleState(.offPlane)
         }
-        
-        // 取得當前位置
-        let currentPosition = arManager.worldPosition(from: hitResult)
-        
-        // 更新測量線
-        renderer.updateLine(to: currentPosition)
-        
-        // 計算當前距離
-        let distance = stateManager.calculateDistance(from: startPosition, to: currentPosition)
-        
-        // 計算中點位置
-        let midpoint = SCNVector3(
-            (startPosition.x + currentPosition.x) / 2,
-            (startPosition.y + currentPosition.y) / 2,
-            (startPosition.z + currentPosition.z) / 2
-        )
-        
-        // 更新距離顯示
-        renderer.showDistance(distance, at: midpoint)
     }
     
     // MARK: - Helper Methods
