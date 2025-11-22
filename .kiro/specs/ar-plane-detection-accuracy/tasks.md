@@ -103,9 +103,9 @@
     - **Property 15: 追蹤品質不佳時平面變黃色**
     - **Validates: Requirements 5.5**
 
-- [ ] 6. 實作游標狀態回饋
+- [x] 6. 實作游標狀態回饋
 
-  - [ ] 6.1 擴展游標渲染支援狀態顏色
+  - [x] 6.1 擴展游標渲染支援狀態顏色
 
     - 定義 ReticleState 枚舉（onPlane, offPlane, disabled）
     - 實作 `setReticleState(_:)` 方法
@@ -113,7 +113,7 @@
     - 對準平面時顯示綠色，未對準時顯示紅色
     - _需求：3.4, 3.5_
 
-  - [ ] 6.2 撰寫 property test 驗證游標顏色回饋
+  - [x] 6.2 撰寫 property test 驗證游標顏色回饋
     - **Property 8: 游標顏色回饋**
     - **Validates: Requirements 3.4, 3.5**
     - 生成隨機游標狀態，驗證顏色映射

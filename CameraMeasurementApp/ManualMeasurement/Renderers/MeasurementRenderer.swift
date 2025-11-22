@@ -9,6 +9,14 @@ import UIKit
 import SceneKit
 import ARKit
 
+/// 游標狀態枚舉
+/// 需求: 3.4, 3.5
+enum ReticleState {
+    case onPlane        // 對準平面 - 綠色
+    case offPlane       // 未對準平面 - 紅色
+    case disabled       // 禁用 - 灰色
+}
+
 class MeasurementRenderer {
     // MARK: - Properties
     
@@ -78,6 +86,40 @@ extension MeasurementRenderer {
     func hideCenterReticle() {
         reticleView?.removeFromSuperview()
         reticleView = nil
+    }
+    
+    /// 設定游標狀態
+    /// 根據狀態自動更新游標顏色
+    /// - Parameter state: 游標狀態
+    /// 需求: 3.4, 3.5
+    func setReticleState(_ state: ReticleState) {
+        let color: UIColor
+        
+        switch state {
+        case .onPlane:
+            // 對準平面時顯示綠色
+            color = UIColor(red: 0.2, green: 1.0, blue: 0.2, alpha: 0.8)
+        case .offPlane:
+            // 未對準平面時顯示紅色
+            color = UIColor(red: 1.0, green: 0.2, blue: 0.2, alpha: 0.8)
+        case .disabled:
+            // 禁用時顯示灰色
+            color = UIColor(white: 0.5, alpha: 0.5)
+        }
+        
+        updateReticleColor(color)
+    }
+    
+    /// 更新游標顏色
+    /// - Parameter color: 要設定的顏色
+    /// 需求: 3.4, 3.5
+    func updateReticleColor(_ color: UIColor) {
+        guard let reticleView = reticleView else { return }
+        
+        // 使用動畫平滑過渡顏色變化
+        UIView.animate(withDuration: 0.2) {
+            reticleView.backgroundColor = color
+        }
     }
 }
 
