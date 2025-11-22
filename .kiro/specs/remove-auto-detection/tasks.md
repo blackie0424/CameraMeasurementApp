@@ -1,113 +1,31 @@
-# Implementation Plan
+# 實作計畫
 
-- [x] 1. Remove automatic detection properties from ViewController
+- [x] 1. 移除 ARKit 除錯選項
 
-  - Remove `objectDetector`, `measurementCalculator`, `referenceObjectManager`, `realtimeMeasurementManager` properties
-  - Remove `currentMeasurementRecord`, `isCapturing`, `capturedImage`, `isRealtimeMeasurementActive` properties
-  - Remove `overlayView`, `frameProcessingLogCounter`, `frameProcessingCounter`, `rendererCallCount` properties
-  - _Requirements: 3.1, 3.2, 3.4_
+  - 開啟 `CameraMeasurementApp/ManualMeasurement/ViewControllers/ManualMeasurementViewController.swift`
+  - 在 `setupARView()` 方法中找到並移除以下程式碼區塊：
+    ```swift
+    // Enable debug options in development
+    #if DEBUG
+    arView.debugOptions = [.showFeaturePoints]
+    #endif
+    ```
+  - 添加註解說明為何移除此選項
+  - _需求：1.1, 1.5, 2.2_
 
-- [x] 2. Remove automatic detection methods from ViewController
+- [ ] 2. 驗證視覺元素完整性
 
-  - Remove `setupOverlayView()` method
-  - Remove `startRealtimeMeasurement()`, `stopRealtimeMeasurement()` methods
-  - Remove `handleRealtimeMeasurementUpdate(_:)`, `handleRealtimeMeasurementError(_:)` methods
-  - Remove `processARFrameForRealtimeMeasurement(_:)` method
-  - _Requirements: 3.1, 3.2, 5.4, 5.5_
+  - 在實體裝置上啟動應用程式
+  - 進入手動測量模式
+  - 確認中心白色游標正常顯示
+  - 確認沒有動態黃色特徵點出現
+  - 執行完整測量流程，確認測量點標記、測量線和距離標籤正常顯示
+  - _需求：1.1, 1.2, 1.3, 1.4_
 
-- [x] 3. Remove capture button functionality from ViewController
-
-  - Remove `captureButtonTapped(_:)` IBAction method
-  - Remove `performMeasurement()` method
-  - Remove `captureARFrame(completion:)` method
-  - Remove `imageFromARFrame(_:)` method
-  - Remove `processCapturedImage(_:)` method
-  - _Requirements: 3.1, 5.3_
-
-- [x] 4. Remove results navigation from ViewController
-
-  - Remove `showResults(with:)` method
-  - Remove `prepare(for:sender:)` logic for "showResults" segue
-  - _Requirements: 3.1_
-
-- [x] 5. Remove ARSCNViewDelegate frame processing methods
-
-  - Remove or simplify `renderer(_:updateAtTime:)` method (remove frame processing logic)
-  - Remove or simplify `session(_:didUpdate:)` method (remove frame processing logic)
-  - Keep AR session error handling methods (`session(_:didFailWithError:)`, `sessionWasInterrupted(_:)`, `sessionInterruptionEnded(_:)`)
-  - _Requirements: 3.1, 5.5_
-
-- [x] 6. Remove ARManagerDelegate automatic detection methods
-
-  - Remove real-time measurement start logic from `arManager(_:didDetectPlane:)`
-  - Remove real-time measurement stop logic from `arManager(_:didChangeTrackingState:)`
-  - Remove real-time measurement stop logic from `arManagerSessionWasInterrupted(_:)`
-  - Remove real-time measurement restart logic from `arManagerSessionInterruptionEnded(_:)`
-  - Keep basic AR status updates and guidance messages
-  - _Requirements: 3.1, 5.5_
-
-- [x] 7. Simplify setupCameraMeasurement method
-
-  - Remove initialization of `objectDetector`, `measurementCalculator`, `referenceObjectManager`
-  - Remove initialization of `realtimeMeasurementManager` and its configuration
-  - Remove call to `setupOverlayView()`
-  - Keep ARManager initialization
-  - _Requirements: 3.2, 5.6_
-
-- [x] 8. Simplify viewWillDisappear method
-
-  - Remove call to `stopRealtimeMeasurement()`
-  - Keep call to `stopARSession()`
-  - _Requirements: 3.1_
-
-- [x] 9. Remove capture button from Main.storyboard
-
-  - Remove `captureButton` UI element
-  - Remove `captureButtonOutlet` connection
-  - Remove `captureAction` connection
-  - Remove all constraints related to capture button
-  - _Requirements: 1.2, 3.3_
-
-- [x] 10. Remove measurement overlay from Main.storyboard
-
-  - Remove `measurementOverlay` view element
-  - Remove `measurementOverlayOutlet` connection
-  - Remove all constraints related to measurement overlay
-  - _Requirements: 1.3, 3.3_
-
-- [x] 11. Remove results segue from Main.storyboard
-
-  - Remove `showResults` segue (identifier: "showResults")
-  - Remove `showResultsSegue` connection
-  - _Requirements: 3.3_
-
-- [ ]\* 12. Verify manual measurement functionality
-
-  - Test that manual measurement button is visible and functional
-  - Test navigation to ManualMeasurementViewController
-  - Test that manual measurement can perform measurements correctly
-  - Test navigation back from manual measurement
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 3.5, 5.6_
-
-- [ ]\* 13. Verify AR infrastructure is intact
-
-  - Test that ARManager initializes correctly
-  - Test that AR session starts and stops correctly
-  - Test that AR tracking state updates work
-  - Test that AR error handling works
-  - _Requirements: 5.1, 5.6_
-
-- [ ]\* 14. Verify UI cleanup
-
-  - Verify capture button is not visible
-  - Verify measurement overlay is not visible
-  - Verify main screen shows only manual measurement button, settings button, status label, and guidance label
-  - Test on different device sizes and orientations
-  - _Requirements: 1.1, 1.2, 1.3, 4.1, 4.2, 4.3, 4.4_
-
-- [ ]\* 15. Verify settings and guidance functionality
-  - Test settings button navigation
-  - Test that settings changes work correctly
-  - Test that guidance messages display correctly
-  - Test that guidance can be shown and hidden
-  - _Requirements: 4.3_
+- [ ] 3. 測試不同環境場景
+  - 在特徵豐富的環境測試（桌面、書架等）
+  - 在特徵稀少的環境測試（白牆、空曠空間）
+  - 在不同光線條件下測試（明亮、昏暗）
+  - 確認所有場景下都沒有特徵點顯示
+  - 確認測量功能在所有場景下正常運作
+  - _需求：1.1, 1.2, 1.3, 1.4_

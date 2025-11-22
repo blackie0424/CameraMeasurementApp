@@ -92,10 +92,12 @@ class ManualMeasurementViewController: UIViewController {
         // Set session delegate to monitor AR session events
         arView.session.delegate = self
         
-        // Enable debug options in development
-        #if DEBUG
-        arView.debugOptions = [.showFeaturePoints]
-        #endif
+        // 移除除錯選項以改善使用者體驗
+        // ARKit 特徵點顯示已移除，使用者只會看到：
+        // - 中心白色游標（Center Reticle）
+        // - 測量點標記（黃色圓點）
+        // - 測量線和距離標籤
+        // 如需除錯，可臨時添加：arView.debugOptions = [.showFeaturePoints]
         
         view.addSubview(arView)
         print("✅ ViewController: ARView setup complete")
