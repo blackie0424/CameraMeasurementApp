@@ -55,9 +55,9 @@
     - **Validates: Requirements 4.2**
     - 生成隨機相機角度，驗證測量點世界座標保持不變
 
-- [ ] 4. 實作 TrackingQualityMonitor
+- [x] 4. 實作 TrackingQualityMonitor
 
-  - [ ] 4.1 建立 TrackingQualityMonitor 類別
+  - [x] 4.1 建立 TrackingQualityMonitor 類別
 
     - 定義 TrackingQuality 枚舉（normal, limited, notAvailable）
     - 實作 `updateTrackingState(_:)` 方法監控 ARCamera.trackingState
@@ -65,7 +65,7 @@
     - 實作 `getWarningMessage()` 方法生成警告訊息
     - _需求：5.1, 5.2, 5.3_
 
-  - [ ]\* 4.2 撰寫 property test 驗證追蹤品質行為
+  - [x] 4.2 撰寫 property test 驗證追蹤品質行為
     - **Property 14: 追蹤品質不佳時的行為**
     - **Validates: Requirements 5.2, 5.3**
     - 生成隨機追蹤狀態，驗證警告和功能禁用邏輯
@@ -93,13 +93,13 @@
     - 追蹤品質不佳時將所有平面變為黃色
     - _需求：5.5_
 
-  - [ ]\* 5.4 撰寫 property test 驗證平面顏色映射
+  - [ ] 5.4 撰寫 property test 驗證平面顏色映射
 
     - **Property 3: 平面類型到顏色映射**
     - **Validates: Requirements 2.2, 2.3**
     - 生成隨機平面類型，驗證顏色正確性
 
-  - [ ]\* 5.5 撰寫 property test 驗證追蹤品質視覺回饋
+  - [ ] 5.5 撰寫 property test 驗證追蹤品質視覺回饋
     - **Property 15: 追蹤品質不佳時平面變黃色**
     - **Validates: Requirements 5.5**
 
