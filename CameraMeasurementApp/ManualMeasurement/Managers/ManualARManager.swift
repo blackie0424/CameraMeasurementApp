@@ -229,4 +229,90 @@ class ManualARManager {
     var trackingState: ARCamera.TrackingState? {
         return arSession.currentFrame?.camera.trackingState
     }
+    
+    // MARK: - Plane-Specific Hit Testing
+    
+    /// Perform hit test prioritizing detected planes
+    /// Only uses existingPlaneUsingExtent type to ensure measurement points are on known planes
+    /// - Parameter screenPoint: Screen coordinate point
+    /// - Returns: Tuple of hit result and corresponding ARPlaneAnchor, or nil if no plane hit
+    /// 需求: 3.1, 3.2
+    func performHitTestOnPlanes(at screenPoint: CGPoint) -> (result: ARHitTestResult, anchor: ARPlaneAnchor)? {
+        guard let sceneView = sceneView else { return nil }
+        
+        // Only check for existing planes using extent
+        // This ensures we only place measurement points on detected, stable planes
+        let results = sceneView.hitTest(screenPoint, types: .existingPlaneUsingExtent)
+        
+        // Find the first result that has an ARPlaneAnchor
+        for result in results {
+            if let planeAnchor = result.anchor as? ARPlaneAnchor {
+                return (result, planeAnchor)
+            }
+        }
+        
+        // No plane was hit
+        return nil
+    }
+    
+    /// Get plane anchor from a hit test result
+    /// - Parameter hitResult: The ARHitTestResult to extract plane anchor from
+    /// - Returns: ARPlaneAnchor if the hit result is associated with a plane, nil otherwise
+    func getPlaneAnchor(for hitResult: ARHitTestResult) -> ARPlaneAnchor? {
+        return hitResult.anchor as? ARPlaneAnchor
+    }
+    
+    // MARK: - Anchored Measurement Points
+    
+    /// Create an anchored measurement point on a plane
+    /// Converts world coordinates to plane local coordinates using inverse transform
+    /// - Parameters:
+    ///   - anchor: The ARPlaneAnchor to anchor the point to
+    ///   - hitResult: The hit test result containing world position
+    /// - Returns: AnchoredMeasurementPoint with plane reference and local coordinates
+    /// 需求: 4.1, 4.3
+    func createAnchoredPoint(on anchor: ARPlaneAnchor, at hitResult: ARHitTestResult) -> AnchoredMeasurementPoint {
+        // Get world position from hit test result
+        let worldTransform = hitResult.worldTransform
+        let worldPosition = simd_float4(
+            worldTransform.columns.3.x,
+            worldTransform.columns.3.y,
+            worldTransform.columns.3.z,
+            1.0
+        )
+        
+        // Get plane's transform and calculate inverse
+        let planeTransform = anchor.transform
+        let planeInverse = simd_inverse(planeTransform)
+        
+        // Convert world position to plane local coordinates
+        let localPosition4 = planeInverse * worldPosition
+        let localPosition = simd_float3(localPosition4.x, localPosition4.y, localPosition4.z)
+        
+        // Create and return anchored measurement point
+        return AnchoredMeasurementPoint(
+            id: UUID(),
+            planeAnchor: anchor,
+            localPosition: localPosition,
+            timestamp: Date()
+        )
+    }
+    
+    /// Calculate world position from a plane anchor and local coordinates
+    /// - Parameters:
+    ///   - anchor: The ARPlaneAnchor
+    ///   - localPoint: Local coordinates relative to the plane
+    /// - Returns: World position as SCNVector3
+    func worldPosition(from anchor: ARPlaneAnchor, localPoint: simd_float3) -> SCNVector3 {
+        // Get plane's world transform
+        let worldTransform = anchor.transform
+        
+        // Convert local coordinates to homogeneous coordinates
+        let localPoint4 = simd_float4(localPoint.x, localPoint.y, localPoint.z, 1.0)
+        
+        // Transform to world coordinates
+        let worldPoint = worldTransform * localPoint4
+        
+        return SCNVector3(worldPoint.x, worldPoint.y, worldPoint.z)
+    }
 }

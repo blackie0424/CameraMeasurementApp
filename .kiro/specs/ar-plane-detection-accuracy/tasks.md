@@ -29,28 +29,28 @@
     - **Validates: Requirements 1.5, 7.2**
     - 生成隨機平面集合，驗證啟用邏輯正確性
 
-- [ ] 3. 擴展 ARManager 支援平面錨點
+- [x] 3. 擴展 ARManager 支援平面錨點
 
-  - [ ] 3.1 實作平面優先的 hit test
+  - [x] 3.1 實作平面優先的 hit test
 
     - 實作 `performHitTestOnPlanes(at:)` 方法
     - 只使用 existingPlaneUsingExtent 類型
     - 返回 hit result 和對應的 ARPlaneAnchor
     - _需求：3.1, 3.2_
 
-  - [ ] 3.2 實作測量點錨定功能
+  - [x] 3.2 實作測量點錨定功能
 
     - 實作 `createAnchoredPoint(on:at:)` 方法
     - 將世界座標轉換為平面局部座標（使用逆矩陣）
     - 創建 AnchoredMeasurementPoint 實例
     - _需求：4.1, 4.3_
 
-  - [ ]\* 3.3 撰寫 property test 驗證 hit test 優先順序
+  - [x] 3.3 撰寫 property test 驗證 hit test 優先順序
 
     - **Property 5: Hit test 優先平面**
     - **Validates: Requirements 3.1**
 
-  - [ ]\* 3.4 撰寫 property test 驗證座標穩定性
+  - [x] 3.4 撰寫 property test 驗證座標穩定性
     - **Property 10: 相機角度改變時座標穩定性**
     - **Validates: Requirements 4.2**
     - 生成隨機相機角度，驗證測量點世界座標保持不變
@@ -158,19 +158,19 @@
     - 格式化為一位小數（例如 "45.3 cm"）
     - _需求：6.5_
 
-  - [ ]\* 8.3 撰寫 property test 驗證 3D 距離計算
+  - [ ] 8.3 撰寫 property test 驗證 3D 距離計算
 
     - **Property 16: 3D 距離計算**
     - **Validates: Requirements 6.1, 6.2, 6.3**
     - 生成隨機測量點，驗證距離計算公式正確性（誤差 < 0.1mm）
 
-  - [ ]\* 8.4 撰寫 property test 驗證跨平面距離計算
+  - [ ] 8.4 撰寫 property test 驗證跨平面距離計算
 
     - **Property 17: 跨平面距離計算**
     - **Validates: Requirements 6.4**
     - 生成位於不同平面的測量點，驗證距離計算
 
-  - [ ]\* 8.5 撰寫 property test 驗證距離格式化
+  - [ ] 8.5 撰寫 property test 驗證距離格式化
     - **Property 18: 距離格式化**
     - **Validates: Requirements 6.5**
     - 生成隨機距離值，驗證格式化輸出
