@@ -8,23 +8,23 @@
   - 實作 `worldPosition()` 方法使用 transform 矩陣計算世界座標
   - _需求：4.1, 4.2, 4.3_
 
-- [ ] 2. 實作 PlaneDetectionManager
+- [x] 2. 實作 PlaneDetectionManager
 
-  - [ ] 2.1 建立 PlaneDetectionManager 類別基礎結構
+  - [x] 2.1 建立 PlaneDetectionManager 類別基礎結構
 
     - 實作平面追蹤（addPlane, updatePlane, removePlane）
     - 實作平面面積計算（使用 extent.x \* extent.z）
     - 實作平面數量統計
     - _需求：1.3, 2.1, 2.4_
 
-  - [ ] 2.2 實作測量啟用條件邏輯
+  - [x] 2.2 實作測量啟用條件邏輯
 
     - 實作 `checkReadyCondition()` 方法
     - 檢查條件：平面數量 ≥ 2 或總面積 ≥ 0.5 平方公尺
     - 實作狀態轉換（detecting → ready → measurementMode）
     - _需求：1.5, 7.2_
 
-  - [ ]\* 2.3 撰寫 property test 驗證啟用條件
+  - [x] 2.3 撰寫 property test 驗證啟用條件
     - **Property 1: 平面偵測啟用條件**
     - **Validates: Requirements 1.5, 7.2**
     - 生成隨機平面集合，驗證啟用邏輯正確性
