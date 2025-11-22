@@ -44,10 +44,38 @@ class MeasurementRenderer {
     /// 平面視覺化節點字典（key: plane anchor UUID）
     private var planeNodes: [UUID: SCNNode] = [:]
     
+    /// 最大平面視覺化數量（效能優化）
+    private let maxPlaneVisualizationCount = 10
+    
+    /// 平面更新節流時間戳記（30 FPS = 1/30 秒）
+    private var lastPlaneUpdateTime: [UUID: TimeInterval] = [:]
+    private let planeUpdateInterval: TimeInterval = 1.0 / 30.0
+    
+    /// 游標更新節流時間戳記（60 FPS = 1/60 秒）
+    private var lastReticleUpdateTime: TimeInterval = 0
+    private let reticleUpdateInterval: TimeInterval = 1.0 / 60.0
+    
     // MARK: - Initialization
     
     init(sceneView: ARSCNView) {
         self.sceneView = sceneView
+    }
+    
+    // MARK: - Deinitialization
+    
+    /// 清理資源以避免記憶體洩漏
+    /// 需求: 2.5 - 確保移除的平面視覺化及時釋放
+    deinit {
+        // 清除所有視覺元素
+        clearAllVisuals()
+        clearAllPlaneVisualizations()
+        
+        // 清除游標
+        reticleView?.removeFromSuperview()
+        reticleView = nil
+        
+        // 清除 scene view 引用
+        sceneView = nil
     }
 }
 
@@ -115,6 +143,13 @@ extension MeasurementRenderer {
     /// 需求: 3.4, 3.5
     func updateReticleColor(_ color: UIColor) {
         guard let reticleView = reticleView else { return }
+        
+        // 節流機制：限制更新頻率為 60 FPS
+        let currentTime = CACurrentMediaTime()
+        guard currentTime - lastReticleUpdateTime >= reticleUpdateInterval else {
+            return
+        }
+        lastReticleUpdateTime = currentTime
         
         // 使用動畫平滑過渡顏色變化
         UIView.animate(withDuration: 0.2) {
@@ -455,6 +490,26 @@ extension MeasurementRenderer {
         
         startPosition = nil
     }
+    
+    /// 清除所有平面視覺化
+    /// 需求: 2.5 - 確保移除的平面視覺化及時釋放
+    func clearAllPlaneVisualizations() {
+        // 移除所有平面節點
+        for (_, planeNode) in planeNodes {
+            planeNode.removeFromParentNode()
+            // 確保幾何體和材質被釋放
+            planeNode.geometry = nil
+        }
+        
+        // 清空字典
+        planeNodes.removeAll()
+        lastPlaneUpdateTime.removeAll()
+    }
+    
+    /// 獲取當前平面視覺化數量（用於記憶體監控）
+    func getPlaneVisualizationCount() -> Int {
+        return planeNodes.count
+    }
 }
 
 // MARK: - Plane Visualization
@@ -467,6 +522,13 @@ extension MeasurementRenderer {
     func visualizePlane(_ anchor: ARPlaneAnchor) {
         guard let sceneView = sceneView else { return }
         
+        // 效能優化：限制平面視覺化數量為最多 10 個
+        // 需求: 2.4 - 渲染效能優化
+        if planeNodes.count >= maxPlaneVisualizationCount && planeNodes[anchor.identifier] == nil {
+            // 如果已達到最大數量且這是新平面，移除最舊的平面
+            removeOldestPlaneVisualization()
+        }
+        
         // 如果已存在該平面的視覺化，先移除
         if let existingNode = planeNodes[anchor.identifier] {
             existingNode.removeFromParentNode()
@@ -477,11 +539,20 @@ extension MeasurementRenderer {
         let height = CGFloat(anchor.extent.z)
         let plane = SCNPlane(width: width, height: height)
         
+        // 效能優化：簡化幾何體複雜度
+        // SCNPlane 已經是最簡單的幾何體，但我們可以確保不使用過多的細分
+        plane.widthSegmentCount = 1
+        plane.heightSegmentCount = 1
+        
         // 根據平面類型設定顏色
         let color = colorForPlane(anchor)
         plane.firstMaterial?.diffuse.contents = color
         plane.firstMaterial?.lightingModel = .constant
         plane.firstMaterial?.isDoubleSided = true
+        
+        // 效能優化：禁用不必要的渲染選項
+        plane.firstMaterial?.writesToDepthBuffer = true
+        plane.firstMaterial?.readsFromDepthBuffer = true
         
         // 創建平面節點
         let planeNode = SCNNode(geometry: plane)
@@ -500,6 +571,25 @@ extension MeasurementRenderer {
         
         // 儲存節點引用
         planeNodes[anchor.identifier] = planeNode
+        
+        // 記錄創建時間（用於移除最舊平面）
+        lastPlaneUpdateTime[anchor.identifier] = CACurrentMediaTime()
+    }
+    
+    /// 移除最舊的平面視覺化（當達到最大數量時）
+    /// 需求: 2.4 - 渲染效能優化
+    private func removeOldestPlaneVisualization() {
+        // 找出最舊的平面（最早更新的）
+        guard let oldestPlaneId = lastPlaneUpdateTime.min(by: { $0.value < $1.value })?.key else {
+            return
+        }
+        
+        // 移除該平面的視覺化
+        if let oldNode = planeNodes[oldestPlaneId] {
+            oldNode.removeFromParentNode()
+            planeNodes.removeValue(forKey: oldestPlaneId)
+            lastPlaneUpdateTime.removeValue(forKey: oldestPlaneId)
+        }
     }
     
     /// 更新平面視覺化
@@ -507,6 +597,15 @@ extension MeasurementRenderer {
     /// - Parameter anchor: 更新的 ARPlaneAnchor
     /// 需求: 2.4
     func updatePlaneVisualization(_ anchor: ARPlaneAnchor) {
+        // 節流機制：限制平面更新頻率為 30 FPS
+        // 需求: 2.4 - 渲染效能優化
+        let currentTime = CACurrentMediaTime()
+        if let lastUpdate = lastPlaneUpdateTime[anchor.identifier],
+           currentTime - lastUpdate < planeUpdateInterval {
+            return
+        }
+        lastPlaneUpdateTime[anchor.identifier] = currentTime
+        
         guard let planeNode = planeNodes[anchor.identifier],
               let planeGeometry = planeNode.geometry as? SCNPlane else {
             // 如果節點不存在，創建新的視覺化
@@ -540,14 +639,24 @@ extension MeasurementRenderer {
         
         // 創建淡出動畫（2 秒）
         let fadeOut = SCNAction.fadeOut(duration: 2.0)
+        
+        // 創建清理動作，確保幾何體和材質被釋放
+        let cleanup = SCNAction.run { node in
+            // 清理幾何體以釋放記憶體
+            node.geometry = nil
+        }
+        
         let remove = SCNAction.removeFromParentNode()
-        let sequence = SCNAction.sequence([fadeOut, remove])
+        let sequence = SCNAction.sequence([fadeOut, cleanup, remove])
         
         // 執行動畫
         planeNode.runAction(sequence)
         
         // 從字典中移除引用
         planeNodes.removeValue(forKey: anchor.identifier)
+        
+        // 清理節流時間戳記
+        lastPlaneUpdateTime.removeValue(forKey: anchor.identifier)
     }
     
     /// 設定特定平面的顏色

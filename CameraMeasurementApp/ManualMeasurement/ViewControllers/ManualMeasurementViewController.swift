@@ -91,6 +91,28 @@ class ManualMeasurementViewController: UIViewController {
         
         // Stop performance monitoring and generate report
         performanceMonitor.stopMonitoring()
+        
+        // 清理資源以避免記憶體洩漏
+        // 需求: 2.5 - 確保移除的平面視覺化及時釋放
+        cleanupResources()
+    }
+    
+    /// 清理所有資源
+    /// 需求: 2.5 - 記憶體管理
+    private func cleanupResources() {
+        // 清除所有視覺元素
+        renderer?.clearAllVisuals()
+        renderer?.clearAllPlaneVisualizations()
+        
+        // 清除平面偵測管理器
+        planeDetectionManager?.cleanup()
+        
+        // 清除追蹤品質監控器回調
+        trackingQualityMonitor?.onQualityChanged = nil
+        
+        // 清除警告視圖
+        hideTrackingWarning()
+        hideRetryButton()
     }
     
     // MARK: - Setup Methods

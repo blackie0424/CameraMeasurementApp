@@ -50,6 +50,14 @@ class PlaneDetectionManager {
         self.state = .detecting
     }
     
+    // MARK: - Deinitialization
+    
+    /// 清理資源以避免記憶體洩漏
+    /// 需求: 2.5 - 確保資源及時釋放
+    deinit {
+        cleanup()
+    }
+    
     // MARK: - Plane Management
     
     /// 新增偵測到的平面
@@ -188,6 +196,22 @@ class PlaneDetectionManager {
     func resetDetection() {
         detectedPlanes.removeAll()
         transitionToState(.detecting)
+    }
+    
+    /// 清理資源（用於記憶體管理）
+    /// 需求: 2.5 - 確保資源及時釋放
+    func cleanup() {
+        detectedPlanes.removeAll()
+        // 清除回調以避免循環引用
+        onStateChanged = nil
+        onPlaneAdded = nil
+        onPlaneUpdated = nil
+        onPlaneRemoved = nil
+    }
+    
+    /// 獲取記憶體使用統計（用於監控）
+    func getMemoryStats() -> (planeCount: Int, totalArea: Float) {
+        return (detectedPlanes.count, getTotalPlaneArea())
     }
     
     /// 狀態轉換
