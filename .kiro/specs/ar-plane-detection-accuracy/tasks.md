@@ -216,9 +216,9 @@
     - **Validates: Requirements 7.3**
     - 生成隨機平面數量，驗證顯示文字正確
 
-- [ ] 11. 整合 ARSessionDelegate
+- [x] 11. 整合 ARSessionDelegate
 
-  - [ ] 11.1 實作平面錨點事件處理
+  - [x] 11.1 實作平面錨點事件處理
 
     - 實作 `session(_:didAdd:)` 處理新平面
     - 實作 `session(_:didUpdate:)` 處理平面更新
@@ -226,13 +226,13 @@
     - 連接 PlaneDetectionManager 和 Renderer
     - _需求：2.1, 2.4, 2.5_
 
-  - [ ] 11.2 實作追蹤狀態監控
+  - [x] 11.2 實作追蹤狀態監控
 
     - 在 `session(_:cameraDidChangeTrackingState:)` 中更新 TrackingQualityMonitor
     - 根據追蹤品質更新 UI 和平面顏色
     - _需求：5.1, 5.2, 5.5_
 
-  - [ ] 11.3 撰寫 property test 驗證平面更新時測量點跟隨
+  - [x] 11.3 撰寫 property test 驗證平面更新時測量點跟隨
     - **Property 12: 平面更新時測量點跟隨**
     - **Validates: Requirements 4.4**
     - 模擬平面更新，驗證測量點座標相應調整

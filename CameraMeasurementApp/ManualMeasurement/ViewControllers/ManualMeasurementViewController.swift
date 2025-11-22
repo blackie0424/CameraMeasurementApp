@@ -1192,23 +1192,80 @@ extension ManualMeasurementViewController: ARSCNViewDelegate {
 
 extension ManualMeasurementViewController: ARSessionDelegate {
     
+    /// 處理追蹤狀態變更
+    /// 需求: 5.1 - 持續監控 ARCamera 的 trackingState
+    /// 需求: 5.2 - 追蹤品質不佳時顯示警告訊息
+    /// 需求: 5.5 - 追蹤品質不佳時將所有平面視覺化變更為黃色
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
         let stateDescription = arManager.getTrackingStateDescription()
         print("📍 Tracking state changed: \(stateDescription)")
         
         // 更新追蹤品質監控器
+        // 需求: 5.1 - 持續監控 ARCamera 的 trackingState
         trackingQualityMonitor.updateTrackingState(camera)
         
-        switch camera.trackingState {
-        case .normal:
-            print("   ✅ Tracking is working normally")
-        case .limited(let reason):
-            print("   ⚠️ Tracking is limited: \(reason)")
-        case .notAvailable:
-            print("   ❌ Tracking is not available")
+        // 在主執行緒更新 UI
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            
+            // 根據追蹤品質更新 UI 和平面顏色
+            switch camera.trackingState {
+            case .normal:
+                print("   ✅ Tracking is working normally")
+                // 追蹤正常，隱藏警告
+                self.hideTrackingWarning()
+                // 恢復平面原本的顏色（根據平面類型）
+                self.restorePlaneColors()
+                
+            case .limited(let reason):
+                print("   ⚠️ Tracking is limited: \(reason)")
+                // 追蹤受限，顯示警告訊息
+                // 需求: 5.2 - 顯示警告訊息
+                if let warningMessage = self.trackingQualityMonitor.getWarningMessage() {
+                    self.showTrackingWarning(warningMessage)
+                }
+                // 需求: 5.5 - 將所有平面視覺化變更為黃色
+                self.setAllPlanesYellow()
+                
+            case .notAvailable:
+                print("   ❌ Tracking is not available")
+                // 追蹤不可用，顯示警告訊息
+                // 需求: 5.2 - 顯示警告訊息
+                if let warningMessage = self.trackingQualityMonitor.getWarningMessage() {
+                    self.showTrackingWarning(warningMessage)
+                }
+                // 需求: 5.5 - 將所有平面視覺化變更為黃色
+                self.setAllPlanesYellow()
+            }
         }
     }
     
+    /// 恢復平面原本的顏色（根據平面類型）
+    private func restorePlaneColors() {
+        let allPlanes = planeDetectionManager.getAllPlanes()
+        for planeInfo in allPlanes {
+            // 根據平面類型設定顏色
+            let color: UIColor
+            if planeInfo.isHorizontal {
+                // 水平平面：藍色
+                color = UIColor(red: 0.2, green: 0.5, blue: 1.0, alpha: 0.3)
+            } else {
+                // 垂直平面：綠色
+                color = UIColor(red: 0.2, green: 1.0, blue: 0.5, alpha: 0.3)
+            }
+            renderer.setPlaneColor(color, for: planeInfo.anchor)
+        }
+    }
+    
+    /// 將所有平面設定為黃色（追蹤品質不佳時）
+    /// 需求: 5.5 - 追蹤品質不佳時將所有平面視覺化變更為黃色
+    private func setAllPlanesYellow() {
+        let yellowColor = UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 0.3)
+        renderer.setAllPlanesColor(yellowColor)
+    }
+    
+    /// 處理新增的錨點
+    /// 需求: 2.1 - 偵測到新平面時渲染視覺化
     func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
         print("➕ Added \(anchors.count) anchor(s)")
         for anchor in anchors {
@@ -1217,26 +1274,45 @@ extension ManualMeasurementViewController: ARSessionDelegate {
                 // 只在非測量模式下接受新平面
                 // 需求: 7.4 - 測量模式下停止新平面視覺化
                 if planeDetectionManager.state != .measurementMode {
+                    // 添加到 PlaneDetectionManager
                     planeDetectionManager.addPlane(planeAnchor)
+                    
+                    // 渲染平面視覺化
+                    // 需求: 2.1 - 在該平面位置渲染半透明視覺化網格
+                    renderer.visualizePlane(planeAnchor)
                 }
             }
         }
     }
     
+    /// 處理更新的錨點
+    /// 需求: 2.4 - 平面持續更新時即時調整視覺化網格
     func session(_ session: ARSession, didUpdate anchors: [ARAnchor]) {
         // 更新平面錨點（即使在測量模式下也允許更新現有平面）
         for anchor in anchors {
             if let planeAnchor = anchor as? ARPlaneAnchor {
+                // 更新 PlaneDetectionManager
                 planeDetectionManager.updatePlane(planeAnchor)
+                
+                // 更新平面視覺化
+                // 需求: 2.4 - 即時調整視覺化網格的大小和形狀
+                renderer.updatePlaneVisualization(planeAnchor)
             }
         }
     }
     
+    /// 處理移除的錨點
+    /// 需求: 2.5 - 平面不再被追蹤時淡出並移除視覺化
     func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
         print("➖ Removed \(anchors.count) anchor(s)")
         for anchor in anchors {
             if let planeAnchor = anchor as? ARPlaneAnchor {
+                // 從 PlaneDetectionManager 移除
                 planeDetectionManager.removePlane(planeAnchor)
+                
+                // 移除平面視覺化（包含 2 秒淡出動畫）
+                // 需求: 2.5 - 在 2 秒後淡出並移除該平面的視覺化
+                renderer.removePlaneVisualization(planeAnchor)
             }
         }
     }
