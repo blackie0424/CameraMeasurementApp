@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21754" systemVersion="22F82" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="MeasurementRecord" representedClassName="MeasurementRecordEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="latitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="longitude" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="referenceObjectName" optional="YES" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <relationship name="detectedObjects" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DetectedObjectEntity" inverseName="measurementRecord" inverseEntity="DetectedObjectEntity"/>
+    </entity>
+    <entity name="DetectedObjectEntity" representedClassName="DetectedObjectEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="objectType" attributeType="String"/>
+        <attribute name="confidence" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="boundingBoxX" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="boundingBoxY" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="boundingBoxWidth" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="boundingBoxHeight" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="worldPositionX" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="worldPositionY" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="worldPositionZ" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="dimensions" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="ObjectDimensionsEntity" inverseName="detectedObject" inverseEntity="ObjectDimensionsEntity"/>
+        <relationship name="measurementRecord" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="MeasurementRecord" inverseName="detectedObjects" inverseEntity="MeasurementRecord"/>
+    </entity>
+    <entity name="ObjectDimensionsEntity" representedClassName="ObjectDimensionsEntity" syncable="YES">
+        <attribute name="length" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="width" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="height" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="accuracy" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="measurementDate" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="detectedObject" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DetectedObjectEntity" inverseName="dimensions" inverseEntity="DetectedObjectEntity"/>
+    </entity>
+</model>
